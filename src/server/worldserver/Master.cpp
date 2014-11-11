@@ -14,7 +14,6 @@
 #include "Configuration/Config.h"
 #include "Database/DatabaseEnv.h"
 #include "Database/DatabaseWorkerPool.h"
-#include "WebServer.h"
 
 #include "CliRunnable.h"
 #include "Log.h"
@@ -200,10 +199,6 @@ int Master::Run()
         }
     }
     #endif
-
-    
-    WebServer* webServer = new WebServer();
-    ACE_Based::Thread WebThread(webServer);
 
     ///- Start up freeze catcher thread
     if (uint32 freeze_delay = ConfigMgr::GetIntDefault("MaxCoreStuckTime", 0))
