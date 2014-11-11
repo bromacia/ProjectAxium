@@ -499,7 +499,6 @@ bool MySQLConnection::_HandleMySQLErrno(uint32 errNo)
         // Outdated table or database structure - terminate core
         case 1054:      // "Unknown column '%s' in '%s'"
         case 1146:      // "Table '%s' doesn't exist"
-            WPFatal(!errNo, "Give me the damn updated database structure -Bacon");
             return false;
 
         default:
