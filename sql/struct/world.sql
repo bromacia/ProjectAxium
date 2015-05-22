@@ -3029,11 +3029,11 @@ CREATE TABLE `transports` (
   UNIQUE KEY `idx_entry` (`entry`)
 ) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Transports';
 
-/*Table structure for table `trinity_string` */
+/*Table structure for table `axium_string` */
 
-DROP TABLE IF EXISTS `trinity_string`;
+DROP TABLE IF EXISTS `axium_string`;
 
-CREATE TABLE `trinity_string` (
+CREATE TABLE `axium_string` (
   `entry` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `content_default` text NOT NULL,
   `content_loc1` text,
