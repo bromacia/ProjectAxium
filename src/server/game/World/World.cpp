@@ -1148,7 +1148,7 @@ void World::LoadConfigSettings(bool reload)
     m_bool_configs[CONFIG_CHATLOG_BGROUND] = ConfigMgr::GetBoolDefault("ChatLogs.Battleground", false);
 
     // IP logging
-    m_bool_configs[CONFIG_IP_LOG_ENABLED]              = ConfigMgr::GetBoolDefault("IPHistoryLog", true);
+    m_bool_configs[CONFIG_IP_LOG_ENABLED]  = ConfigMgr::GetBoolDefault("IPHistoryLog", true);
 
     // cast logging
     m_bool_configs[CONFIG_CASTLOG_ENABLED] = ConfigMgr::GetBoolDefault("CastLogs.Enabled", false);

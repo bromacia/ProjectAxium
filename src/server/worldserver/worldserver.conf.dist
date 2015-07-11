@@ -707,13 +707,31 @@ LogDB.World = 0
 
 LogDB.Chat = 0
 
-
 #    ChatLogFile
 #        Description: Log file for chat logs.
 #        Default:     "Chat.log" - (Enabled)
 #                     ""         - (Disabled)
 
 ChatLogFile = "Chat.log"
+
+#
+#     DBChatLog.Enabled
+#     Description: Log chat messages to the database
+#                  instead of a log file
+#     Default: 0 - (Disabled)
+#              1 - (Enabled)
+#
+
+DBChatLog.Enabled = 0
+
+#
+#     DBChatLog.MinGMLevel
+#     Description: Disables the logging of chat for
+#                  the minimum GM level and all levels above
+#     Default:     2
+#
+
+DBChatLog.MinGMLevel = 2
 
 #    ChatLogTimestamp
 #        Description: Append timestamp to the chat log file name.
@@ -796,6 +814,46 @@ ChatLogs.Addon = 0
 #                     1 - (Enabled)
 
 ChatLogs.BattleGround = 0
+
+#
+#
+#     CastLogs.Enabled
+#        Description: Enable log of player casted spells
+#        Default:     0
+
+CastLogs.Enabled = 0
+
+#
+#     CastLogs.Accounts
+#        Description: Only log cast from players of these accounts
+#        Default:     ""
+#                     "12 24 43"
+
+CastLogs.Accounts = ""
+
+#
+#    CastLogFile
+#        Description: Log file for cast logs.
+#        Default:     "Cast.log" - (Enabled)
+#                     ""         - (Disabled)
+
+CastLogFile = "Cast.log"
+
+#
+#     CastLogTimestamp
+#        Description: Append timestamp to the cast log file name.
+#        Default: 1 = Enable
+#                 0 = Disable
+
+CastLogTimestamp = 1
+
+#
+#    IPHistoryLog
+#        Description: Log account IP access history.
+#                     0 - (Disabled)
+#        Default:     1 - (Enabled)
+
+IPHistoryLog = 1
 
 #
 ###################################################################################################
@@ -2582,6 +2640,21 @@ Arena.ArenaStartPersonalRating = 0
 Arena.ArenaStartMatchmakerRating = 1500
 
 #
+#   Arena.ProgressiveMMRTimer
+#     Description: Time between increases in MMR search range
+#       Default:    30000 (30 seconds)
+
+Arena.ProgressiveMMRTimer = 30000
+
+#
+#    Arena.ProgressiveMMRStepSize
+#        Description: Amount by which the search range is increased
+#                     for each passing of ProgressiveMMRTimer
+#     Default:    50
+
+Arena.ProgressiveMMRStepSize = 50
+
+#
 ###################################################################################################
 
 ###################################################################################################
@@ -2886,6 +2959,8 @@ PlayerDump.DisallowPaths = 1
 
 PlayerDump.DisallowOverwrite = 1
 
+###################################################################################################
+#
 #
 #     DuelReset.Cooldown
 #     Reseting cooldown and restore health to start duel
@@ -2896,63 +2971,231 @@ PlayerDump.DisallowOverwrite = 1
 DuelReset.Cooldown = 1
 
 #
-#    IPHistoryLog
-#        Description: Log account IP access history.
-#                     0 - (Disabled)
-#        Default:     1 - (Enabled)
+#	  MailQueue.Timer
+#     Set the time interval of the remote mail queue
+#     Default: 2 (minutes)
+#
 
-IPHistoryLog = 1
+MailQueue.Timer = 2
 
 #
+#     HealerOnlyBauble
+#     Enables the limiting of Bauble to True Blood to healers only
+#     Default: 0 - Disable
+#              1 - Enable
 #
-#     CastLogs.Enabled
-#        Description: Enable log of player casted spells
-#        Default:     0
 
-CastLogs.Enabled = 0
-
-#
-#     CastLogs.Accounts
-#        Description: Only log cast from players of these accounts
-#        Default:     ""
-#                     "12 24 43"
-
-CastLogs.Accounts = ""
+HealerOnlyBauble = 0
 
 #
-#    CastLogFile
-#        Description: Log file for cast logs.
-#        Default:     "Cast.log" - (Enabled)
-#                     ""         - (Disabled)
+#     StealthDetectionValue
+#     Set the value of stealth detection for all players
+#     Default: 30
+#
 
-CastLogFile = "Cast.log"
+StealthDetectionValue = 30
 
 #
-#     CastLogTimestamp
-#        Description: Append timestamp to the cast log file name.
-#        Default: 1 = Enable
-#                 0 = Disable
-
-CastLogTimestamp = 1
-###################################################################################################
-
-###################################################################################################
+#     ArenaSpectator.MinRating
+#     Description: Set the minimum required rating of teams to
+#                  be available to spectate
+#     Default:     1000
 #
-#
-#
-#   Arena.ProgressiveMMRTimer
-#     Description: Time between increases in MMR search range
-#       Default:    30000 (30 seconds)
 
-Arena.ProgressiveMMRTimer = 30000
+ArenaSpectator.MinRating = 1000
 
 #
-#    Arena.ProgressiveMMRStepSize
-#        Description: Amount by which the search range is increased
-#                     for each passing of ProgressiveMMRTimer
-#     Default:    50
+#     MovementGeneratorResetTime
+#     Description: Set the reset time of the above movement generators
+#     Default (Confused Movement Generator): 100
+#     Default (Fleeing Movement Generator): 1000
+#
 
-Arena.ProgressiveMMRStepSize = 50
+ConfusedMovementGeneratorResetTime = 100
+FleeingMovementGeneratorResetTime = 1000
 
 #
-###################################################################################################
+#     DelayTime
+#     Description: Set the delay timer for various server delay systems
+#     Default (GenericSpells): 100
+#     Default (MovementSpells): 10
+#     Default (SilenceSpells): 10
+#     Default (MiscSpells): 100
+#     Default (Combat): 100
+#
+
+SpellDelaySpellTime = 100
+MovementDelaySpellTime = 10
+SilenceDelaySpellTime = 10
+MiscDelaySpellTime = 100
+CombatDelay = 100
+
+#
+#     ArenaCharter.RequiredSignatures
+#     Description: Set the required signature for arena charters
+#     Default (2v2): 1
+#     Default (3v3): 2
+#     Default (5v5): 4
+#
+
+ArenaCharter.2v2RequiredSignatures = 0
+ArenaCharter.3v3RequiredSignatures = 0
+ArenaCharter.5v5RequiredSignatures = 0
+
+#
+#     ArenaPointsCap.MinimumCap
+#     Description: Set the minimum arena points cap of freshly
+#                  freshly created characters
+#     Default:     2000
+#
+
+ArenaPointsCap.MinimumCap = 2000
+
+#
+#     ArenaPointsCap.RequiredGames
+#     Description: Set the amount of games required for players
+#                  to reach their arena points cap
+#     Default:     100
+#
+
+ArenaPointsCap.RequiredGames = 100
+
+#
+#     GlobalAdjustment.On
+#     Description: Enable the global adjustment system
+#     Default:     0
+#
+
+GlobalAdjustment.On = 0
+
+#
+#     GlobalDamageAdjustment.Class.Spec
+#     Description: Adjust the damage of specific classes/specs
+#     Default:     1.00 (100%)
+#
+
+# Warrior
+GlobalDamageAdjustment.Warrior.Default = 1.00
+GlobalDamageAdjustment.Warrior.Arms = 1.00
+GlobalDamageAdjustment.Warrior.Fury = 1.00
+GlobalDamageAdjustment.Warrior.Prot = 1.00
+
+# Paladin
+GlobalDamageAdjustment.Paladin.Default = 1.00
+GlobalDamageAdjustment.Paladin.Holy = 1.00
+GlobalDamageAdjustment.Paladin.Prot = 1.00
+GlobalDamageAdjustment.Paladin.Ret = 1.00
+
+# Death Knight
+GlobalDamageAdjustment.Deathknight.Default = 1.00
+GlobalDamageAdjustment.Deathknight.Blood = 1.00
+GlobalDamageAdjustment.Deathknight.Frost = 1.00
+GlobalDamageAdjustment.Deathknight.Unholy = 1.00
+
+# Hunter
+GlobalDamageAdjustment.Hunter.Default = 1.00
+GlobalDamageAdjustment.Hunter.BM = 1.00
+GlobalDamageAdjustment.Hunter.Marks = 1.00
+GlobalDamageAdjustment.Hunter.Survival = 1.00
+
+# Shaman
+GlobalDamageAdjustment.Shaman.Default = 1.00
+GlobalDamageAdjustment.Shaman.Ele = 1.00
+GlobalDamageAdjustment.Shaman.Enh = 1.00
+GlobalDamageAdjustment.Shaman.Resto = 1.00
+
+# Rogue
+GlobalDamageAdjustment.Rogue.Default = 1.00
+GlobalDamageAdjustment.Rogue.Muti = 1.00
+GlobalDamageAdjustment.Rogue.Combat = 1.00
+GlobalDamageAdjustment.Rogue.Sub = 1.00
+
+# Druid
+GlobalDamageAdjustment.Druid.Default = 1.00
+GlobalDamageAdjustment.Druid.Balance = 1.00
+GlobalDamageAdjustment.Druid.Feral = 1.00
+GlobalDamageAdjustment.Druid.Resto = 1.00
+
+# Priest
+GlobalDamageAdjustment.Priest.Default = 1.00
+GlobalDamageAdjustment.Priest.Disc = 1.00
+GlobalDamageAdjustment.Priest.Holy = 1.00
+GlobalDamageAdjustment.Priest.Shadow = 1.00
+
+# Mage
+GlobalDamageAdjustment.Mage.Default = 1.00
+GlobalDamageAdjustment.Mage.Arcane = 1.00
+GlobalDamageAdjustment.Mage.Fire = 1.00
+GlobalDamageAdjustment.Mage.Frost = 1.00
+
+# Warlock
+GlobalDamageAdjustment.Warlock.Default = 1.00
+GlobalDamageAdjustment.Warlock.Affi = 1.00
+GlobalDamageAdjustment.Warlock.Demo = 1.00
+GlobalDamageAdjustment.Warlock.Destro = 1.00
+
+#
+#     GlobalHealingAdjustment.Class.Spec
+#     Description: Adjust the healing of specific classes/specs
+#     Default:     1.00 (100%)
+#
+
+# Warrior
+GlobalHealingAdjustment.Warrior.Default = 1.00
+GlobalHealingAdjustment.Warrior.Arms = 1.00
+GlobalHealingAdjustment.Warrior.Fury = 1.00
+GlobalHealingAdjustment.Warrior.Prot = 1.00
+
+# Paladin
+GlobalHealingAdjustment.Paladin.Default = 1.00
+GlobalHealingAdjustment.Paladin.Holy = 1.00
+GlobalHealingAdjustment.Paladin.Prot = 1.00
+GlobalHealingAdjustment.Paladin.Ret = 1.00
+
+# Death Knight
+GlobalHealingAdjustment.Deathknight.Default = 1.00
+GlobalHealingAdjustment.Deathknight.Blood = 1.00
+GlobalHealingAdjustment.Deathknight.Frost = 1.00
+GlobalHealingAdjustment.Deathknight.Unholy = 1.00
+
+# Hunter
+GlobalHealingAdjustment.Hunter.Default = 1.00
+GlobalHealingAdjustment.Hunter.BM = 1.00
+GlobalHealingAdjustment.Hunter.Marks = 1.00
+GlobalHealingAdjustment.Hunter.Survival = 1.00
+
+# Shaman
+GlobalHealingAdjustment.Shaman.Default = 1.00
+GlobalHealingAdjustment.Shaman.Ele = 1.00
+GlobalHealingAdjustment.Shaman.Enh = 1.00
+GlobalHealingAdjustment.Shaman.Resto = 1.00
+
+# Rogue
+GlobalHealingAdjustment.Rogue.Default = 1.00
+GlobalHealingAdjustment.Rogue.Muti = 1.00
+GlobalHealingAdjustment.Rogue.Combat = 1.00
+GlobalHealingAdjustment.Rogue.Sub = 1.00
+
+# Druid
+GlobalHealingAdjustment.Druid.Default = 1.00
+GlobalHealingAdjustment.Druid.Balance = 1.00
+GlobalHealingAdjustment.Druid.Feral = 1.00
+GlobalHealingAdjustment.Druid.Resto = 1.00
+
+# Priest
+GlobalHealingAdjustment.Priest.Default = 1.00
+GlobalHealingAdjustment.Priest.Disc = 1.00
+GlobalHealingAdjustment.Priest.Holy = 1.00
+GlobalHealingAdjustment.Priest.Shadow = 1.00
+
+# Mage
+GlobalHealingAdjustment.Mage.Default = 1.00
+GlobalHealingAdjustment.Mage.Arcane = 1.00
+GlobalHealingAdjustment.Mage.Fire = 1.00
+GlobalHealingAdjustment.Mage.Frost = 1.00
+
+# Warlock
+GlobalHealingAdjustment.Warlock.Default = 1.00
+GlobalHealingAdjustment.Warlock.Affi = 1.00
+GlobalHealingAdjustment.Warlock.Demo = 1.00
+GlobalHealingAdjustment.Warlock.Destro = 1.00
