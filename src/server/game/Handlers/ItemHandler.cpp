@@ -635,7 +635,7 @@ void WorldSession::HandleBuybackItem(WorldPacket & recv_data)
 
     if (pItemTemplate->ExtendedCost2)
     {
-        if (!_player->CheckExtendedCost2(pItemTemplate))
+        if (!sObjectMgr->CheckExtendedCost2(_player, pItemTemplate))
             return;
 
         if (extendedCost2.Required_Item_Id && extendedCost2.Required_Item_Count)

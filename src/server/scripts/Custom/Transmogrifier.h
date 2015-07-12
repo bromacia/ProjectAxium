@@ -107,6 +107,8 @@ class Transmogrifier : public CreatureScript
         void RemoveAllWeaponTransmog(Player* player);
         void RemoveAllEnchantTransmog(Player* player);
         void RemoveAllTransmog(Player* player);
+        static bool CheckItem(Player* player, const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate);
+        static void TransmogrifyItem(Player* player, uint32 item, const VendorItem* vItem);
     private:
         uint16 GetTeamById(uint8 Id)
         {

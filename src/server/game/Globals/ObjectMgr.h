@@ -1186,15 +1186,14 @@ class ObjectMgr
         void LoadMailQueue();
 
         void LoadExtendedCost2();
-
-        ExtendedCost2Map GetExtendedCost2Map() const { return extendedCost2Map; }
+        ExtendedCost2Map GetExtendedCost2Map() const { return m_extendedCost2Map; }
+        bool CheckExtendedCost2(Player* player, const ItemTemplate* vItemTemplate);
+        std::string CreateExtendedCost2ErrorMessage(uint32 extendedCost2Id);
 
         void LoadInitSpells();
-
         InitSpellMap GetInitSpellMap() const { return m_initSpells; }
 
         void LoadInfoText();
-
         InfoTextMap GetInfoTextMap() const { return mInfoText; }
 
     private:
@@ -1273,7 +1272,7 @@ class ObjectMgr
         PageTextContainer PageTextStore;
         InstanceTemplateContainer InstanceTemplateStore;
 
-        ExtendedCost2Map extendedCost2Map;
+        ExtendedCost2Map m_extendedCost2Map;
 
         InfoTextMap mInfoText;
 

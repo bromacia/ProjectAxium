@@ -27,6 +27,7 @@
 #include "ScriptMgr.h"
 #include "SpellScript.h"
 #include "PoolMgr.h"
+#include "PvPMgr.h"
 
 ScriptMapMap sQuestEndScripts;
 ScriptMapMap sQuestStartScripts;
@@ -8896,12 +8897,127 @@ void ObjectMgr::LoadExtendedCost2()
         extendedCost2.Required_Item_Id    = fields[5].GetUInt32();
         extendedCost2.Required_Item_Count = fields[6].GetUInt32();
 
-        extendedCost2Map[fields[0].GetUInt32()] = extendedCost2;
+        m_extendedCost2Map[fields[0].GetUInt32()] = extendedCost2;
     }
     while (result->NextRow());
 
     sLog->outString(">> Loaded ExtendedCost2 in %u ms", GetMSTimeDiffToNow(oldMSTime));
     sLog->outString();
+}
+
+bool ObjectMgr::CheckExtendedCost2(Player* player, const ItemTemplate* vItemTemplate)
+{
+    if (player->HasGameMasterTagOn())
+        return true;
+
+    ExtendedCost2 extendedCost2 = m_extendedCost2Map[vItemTemplate->ExtendedCost2];
+
+    if (extendedCost2.Required_2v2_Rating)
+        if (sPvPMgr->GetLifetime2v2Rating(player->GetGUID()) < extendedCost2.Required_2v2_Rating)
+            return false;
+
+    if (extendedCost2.Required_3v3_Rating)
+        if (sPvPMgr->GetLifetime3v3Rating(player->GetGUID()) < extendedCost2.Required_3v3_Rating)
+            return false;
+
+    if (extendedCost2.Required_5v5_Rating)
+        if (sPvPMgr->GetLifetime5v5Rating(player->GetGUID()) < extendedCost2.Required_5v5_Rating)
+            return false;
+
+    if (extendedCost2.Required_Title)
+    {
+        const CharTitlesEntry* titleInfo = sCharTitlesStore.LookupEntry(extendedCost2.Required_Title);
+        if (!titleInfo)
+        {
+            player->SendSysMessage("Unable to find title info for title Id: %u, ExtendedCost2: %u", extendedCost2.Required_Title, vItemTemplate->ExtendedCost2);
+            return false;
+        }
+
+        if (!player->HasTitle(titleInfo))
+            return false;
+    }
+
+    if (extendedCost2.Required_Item_Id && extendedCost2.Required_Item_Count)
+        if (!player->HasItemCount(extendedCost2.Required_Item_Id, extendedCost2.Required_Item_Count))
+            return false;
+
+    return true;
+}
+
+std::string ObjectMgr::CreateExtendedCost2ErrorMessage(uint32 extendedCost2Id)
+{
+    ExtendedCost2 extendedCost2 = m_extendedCost2Map[extendedCost2Id];
+    std::stringstream message;
+    bool firstMessageAdded = false;
+
+    if (extendedCost2.Required_2v2_Rating)
+    {
+        message << "2v2 Rating: " << extendedCost2.Required_2v2_Rating;
+        firstMessageAdded = true;
+    }
+
+    if (extendedCost2.Required_3v3_Rating)
+    {
+        if (firstMessageAdded)
+            message << " & ";
+
+        message << "3v3 Rating: " << extendedCost2.Required_3v3_Rating;
+
+        if (!firstMessageAdded)
+            firstMessageAdded = true;
+    }
+
+    if (extendedCost2.Required_5v5_Rating)
+    {
+        if (firstMessageAdded)
+            message << " & ";
+
+        message << "5v5 Rating: " << extendedCost2.Required_5v5_Rating;
+
+        if (!firstMessageAdded)
+            firstMessageAdded = true;
+    }
+
+    if (extendedCost2.Required_Title)
+    {
+        std::string titleName = "";
+        if (const CharTitlesEntry* titleInfo = sCharTitlesStore.LookupEntry(extendedCost2.Required_Title))
+        {
+            titleName = titleInfo->name[DEFAULT_LOCALE];
+
+            std::size_t found = titleName.find(" %s");
+            if (found != std::string::npos)
+                titleName.replace(found, 3, "");
+
+            found = titleName.find("%s ");
+            if (found != std::string::npos)
+                titleName.replace(found, 3, "");
+
+            if (firstMessageAdded)
+                message << " & ";
+
+            message << "Title: " << titleName;
+
+            if (!firstMessageAdded)
+                firstMessageAdded = true;
+        }
+    }
+
+    if (extendedCost2.Required_Item_Id && extendedCost2.Required_Item_Count)
+    {
+        std::string itemName = "";
+        if (const ItemTemplate* itemTemplate = sObjectMgr->GetItemTemplate(extendedCost2.Required_Item_Id))
+        {
+            itemName = itemTemplate->Name1;
+
+            if (firstMessageAdded)
+                message << " & ";
+
+            message << extendedCost2.Required_Item_Count << " " << itemName << "(s)";
+        }
+    }
+
+    return message.str();
 }
 
 void ObjectMgr::LoadInitSpells()

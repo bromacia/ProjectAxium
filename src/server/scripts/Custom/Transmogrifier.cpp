@@ -231,12 +231,12 @@ void Transmogrifier::SelectIndividualTransmog(Player* player, Creature* creature
         {
             if (const ItemTemplate* vItemTemplate = sObjectMgr->GetItemTemplate(vItem->item))
             {
-                if (!player->CheckItem(vItemTemplate, pItemTemplate))
+                if (!CheckItem(player, vItemTemplate, pItemTemplate))
                     continue;
 
                 int32 leftInStock = 0xFFFFFFFF; // The item will appear normally
 
-                if (!player->CheckExtendedCost2(vItemTemplate))
+                if (!sObjectMgr->CheckExtendedCost2(player, vItemTemplate))
                     leftInStock = 0x0; // The item will appear greyed out
 
                 ++count;
@@ -453,6 +453,83 @@ void Transmogrifier::RemoveAllTransmog(Player* player)
     }
 
     player->CLOSE_GOSSIP_MENU();
+}
+
+bool Transmogrifier::CheckItem(Player* player, const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate)
+{
+    // Faction specific items
+    if ((vItemTemplate->Flags2 == ITEM_FLAGS_EXTRA_ALLIANCE_ONLY && player->GetTeam() == HORDE) ||
+        (vItemTemplate->Flags2 == ITEM_FLAGS_EXTRA_HORDE_ONLY && player->GetTeam() == ALLIANCE))
+        return false;
+
+    // Class specific items
+    if (!(vItemTemplate->AllowableClass & player->getClassMask()))
+        return false;
+
+    if (vItemTemplate->Class == ITEM_CLASS_ARMOR)
+    {
+        bool IsChestInvType = (vItemTemplate->InventoryType == INVTYPE_CHEST && pItemTemplate->InventoryType == INVTYPE_ROBE) || (vItemTemplate->InventoryType == INVTYPE_ROBE && pItemTemplate->InventoryType == INVTYPE_CHEST);
+        if (vItemTemplate->Class != pItemTemplate->Class || vItemTemplate->SubClass != pItemTemplate->SubClass || (!IsChestInvType && vItemTemplate->InventoryType != pItemTemplate->InventoryType))
+            return false;
+    }
+
+    if (vItemTemplate->Class == ITEM_CLASS_WEAPON)
+    {
+        if (vItemTemplate->Class != pItemTemplate->Class || vItemTemplate->SubClass != pItemTemplate->SubClass)
+            return false;
+
+        // Special case for Fist Weapons because the models for the right hand and left hand are different
+        if (vItemTemplate->SubClass == ITEM_SUBCLASS_WEAPON_FIST && vItemTemplate->InventoryType != pItemTemplate->InventoryType)
+            return false;
+    }
+
+    return true;
+}
+
+void Transmogrifier::TransmogrifyItem(Player* player, uint32 item, const VendorItem* vItem)
+{
+    const ItemTemplate* vItemTemplate = sObjectMgr->GetItemTemplate(item);
+    uint8 itemSlot = player->GetSelectedTransmogItemSlot();
+    uint16 transmogSlot = 0;
+
+    switch (itemSlot)
+    {
+        case EQUIPMENT_SLOT_HEAD:      transmogSlot = PLAYER_VISIBLE_ITEM_1_ENTRYID;  break;
+        case EQUIPMENT_SLOT_SHOULDERS: transmogSlot = PLAYER_VISIBLE_ITEM_3_ENTRYID;  break;
+        case EQUIPMENT_SLOT_CHEST:     transmogSlot = PLAYER_VISIBLE_ITEM_5_ENTRYID;  break;
+        case EQUIPMENT_SLOT_HANDS:     transmogSlot = PLAYER_VISIBLE_ITEM_10_ENTRYID; break;
+        case EQUIPMENT_SLOT_LEGS:      transmogSlot = PLAYER_VISIBLE_ITEM_7_ENTRYID;  break;
+        case EQUIPMENT_SLOT_WRISTS:    transmogSlot = PLAYER_VISIBLE_ITEM_9_ENTRYID;  break;
+        case EQUIPMENT_SLOT_WAIST:     transmogSlot = PLAYER_VISIBLE_ITEM_6_ENTRYID;  break;
+        case EQUIPMENT_SLOT_FEET:      transmogSlot = PLAYER_VISIBLE_ITEM_8_ENTRYID;  break;
+        case EQUIPMENT_SLOT_MAINHAND:  transmogSlot = PLAYER_VISIBLE_ITEM_16_ENTRYID; break;
+        case EQUIPMENT_SLOT_OFFHAND:   transmogSlot = PLAYER_VISIBLE_ITEM_17_ENTRYID; break;
+        case EQUIPMENT_SLOT_RANGED:    transmogSlot = PLAYER_VISIBLE_ITEM_18_ENTRYID; break;
+    }
+
+    Item* pItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, itemSlot);
+    if (!pItem)
+        return;
+
+    const ItemTemplate* pItemTemplate = player->GetItemByPos(INVENTORY_SLOT_BAG_0, itemSlot)->GetTemplate();
+    if (!pItemTemplate)
+        return;
+
+    if (!Transmogrifier::CheckItem(player, vItemTemplate, pItemTemplate))
+        return;
+
+    if (!sObjectMgr->CheckExtendedCost2(player, vItemTemplate))
+    {
+        player->SendSysMessage("%s requires %s.", vItemTemplate->Name1.c_str(), sObjectMgr->CreateExtendedCost2ErrorMessage(vItemTemplate->ExtendedCost2).c_str());
+        return;
+    }
+
+    pItem->TransmogEntry = vItemTemplate->ItemId;
+    player->SetUInt32Value(transmogSlot, vItemTemplate->ItemId);
+    TransmogItemInformation tItemInfo;
+    tItemInfo.TransmogEntry = pItem->TransmogEntry;
+    tItemInfo.TransmogEnchant = pItem->TransmogEnchant;
+    player->transmogItemsSaveQueue[pItem->GetGUIDLow()] = tItemInfo;
 }
 
 void AddSC_Transmogrifier()

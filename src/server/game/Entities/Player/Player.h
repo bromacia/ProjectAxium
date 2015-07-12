@@ -2600,10 +2600,6 @@ class Player : public Unit, public GridObject<Player>
 
         uint8 GetSelectedTransmogItemSlot() const { return m_selectedTransmogItemSlot; }
         void SetSelectedTransmogItemSlot(uint8 slot) { m_selectedTransmogItemSlot = slot; }
-        void TransmogrifyItem(uint32 item, const VendorItem* vItem);
-        bool CheckItem(const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate);
-        bool CheckExtendedCost2(const ItemTemplate* vItemTemplate);
-        std::string CreateExtendedCost2ErrorMessage(uint32 extendedCost2Id);
 
         TransmogItemsSaveQueue transmogItemsSaveQueue;
         TransmogSets transmogSets;
