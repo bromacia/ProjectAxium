@@ -966,7 +966,6 @@ bool MallInOne::ShowInventory(Player* player, Creature* creature, uint32 invList
                 if (!CheckVendorItem(player, vItemTemplate, invListOption))
                     continue;
 
-                ++count;
                 data << uint32(count + 1);                      // Client expects counting to start at 1
                 data << uint32(vItem->item);                    // Entry
                 data << uint32(vItemTemplate->DisplayInfoID);   // DisplayId
@@ -978,6 +977,8 @@ bool MallInOne::ShowInventory(Player* player, Creature* creature, uint32 invList
                     data << uint32(0);
                 else
                     data << uint32(vItem->ExtendedCost);
+
+                ++count;
             }
         }
     }
@@ -1186,6 +1187,31 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
     if (!(vItemTemplate->AllowableClass & player->getClassMask()))
         return false;
 
+    bool IsInvTypeArmor = vItemTemplate->InventoryType == INVTYPE_HEAD ||
+        vItemTemplate->InventoryType == INVTYPE_SHOULDERS ||
+        vItemTemplate->InventoryType == INVTYPE_CHEST ||
+        vItemTemplate->InventoryType == INVTYPE_ROBE ||
+        vItemTemplate->InventoryType == INVTYPE_HANDS ||
+        vItemTemplate->InventoryType == INVTYPE_LEGS ||
+        vItemTemplate->InventoryType == INVTYPE_WRISTS ||
+        vItemTemplate->InventoryType == INVTYPE_WAIST ||
+        vItemTemplate->InventoryType == INVTYPE_FEET;
+
+    bool IsInvTypeAccessory = vItemTemplate->InventoryType == INVTYPE_NECK ||
+        vItemTemplate->InventoryType == INVTYPE_CLOAK ||
+        vItemTemplate->InventoryType == INVTYPE_FINGER;
+
+    bool IsInvTypeWeapon = vItemTemplate->InventoryType == INVTYPE_WEAPON ||
+        vItemTemplate->InventoryType == INVTYPE_SHIELD ||
+        vItemTemplate->InventoryType == INVTYPE_RANGED ||
+        vItemTemplate->InventoryType == INVTYPE_2HWEAPON ||
+        vItemTemplate->InventoryType == INVTYPE_WEAPONMAINHAND ||
+        vItemTemplate->InventoryType == INVTYPE_WEAPONOFFHAND ||
+        vItemTemplate->InventoryType == INVTYPE_HOLDABLE ||
+        vItemTemplate->InventoryType == INVTYPE_THROWN ||
+        vItemTemplate->InventoryType == INVTYPE_RANGEDRIGHT ||
+        vItemTemplate->InventoryType == INVTYPE_RELIC;
+
     switch (invListOption)
     {
         case INVENTORY_LIST_GENERAL_GOODS:
@@ -1253,14 +1279,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != GetUsableArmorProficiencyByClass(player->getClass()))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1270,9 +1289,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (!IsPhraseInString(vItemTemplate->Name1, "Relentless") && !IsPhraseInString(vItemTemplate->Name1, "Titan-Forged"))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_NECK &&
-                vItemTemplate->InventoryType != INVTYPE_CLOAK &&
-                vItemTemplate->InventoryType != INVTYPE_FINGER)
+            if (!IsInvTypeAccessory)
                 return false;
 
             break;
@@ -1282,16 +1299,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (!IsPhraseInString(vItemTemplate->Name1, "Relentless"))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_WEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_SHIELD &&
-                vItemTemplate->InventoryType != INVTYPE_RANGED &&
-                vItemTemplate->InventoryType != INVTYPE_2HWEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONMAINHAND &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONOFFHAND &&
-                vItemTemplate->InventoryType != INVTYPE_HOLDABLE &&
-                vItemTemplate->InventoryType != INVTYPE_THROWN &&
-                vItemTemplate->InventoryType != INVTYPE_RANGEDRIGHT &&
-                vItemTemplate->InventoryType != INVTYPE_RELIC)
+            if (!IsInvTypeWeapon)
                 return false;
 
             break;
@@ -1307,14 +1315,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_CLOTH)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1330,14 +1331,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_LEATHER)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1353,14 +1347,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_MAIL)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1376,14 +1363,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_PLATE)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1393,9 +1373,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (IsPhraseInString(vItemTemplate->Name1, "Relentless") || IsPhraseInString(vItemTemplate->Name1, "Titan-Forged") || vItemTemplate->ItemLevel != 245)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_NECK &&
-                vItemTemplate->InventoryType != INVTYPE_CLOAK &&
-                vItemTemplate->InventoryType != INVTYPE_FINGER)
+            if (!IsInvTypeAccessory)
                 return false;
 
             break;
@@ -1407,16 +1385,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
                 vItemTemplate->ItemLevel != 245 && vItemTemplate->ItemLevel != 258))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_WEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_SHIELD &&
-                vItemTemplate->InventoryType != INVTYPE_RANGED &&
-                vItemTemplate->InventoryType != INVTYPE_2HWEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONMAINHAND &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONOFFHAND &&
-                vItemTemplate->InventoryType != INVTYPE_HOLDABLE &&
-                vItemTemplate->InventoryType != INVTYPE_THROWN &&
-                vItemTemplate->InventoryType != INVTYPE_RANGEDRIGHT &&
-                vItemTemplate->InventoryType != INVTYPE_RELIC)
+            if (!IsInvTypeWeapon)
                 return false;
 
             break;
@@ -1439,14 +1408,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != GetUsableArmorProficiencyByClass(player->getClass()))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1456,9 +1418,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (!IsPhraseInString(vItemTemplate->Name1, "Wrathful"))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_NECK &&
-                vItemTemplate->InventoryType != INVTYPE_CLOAK &&
-                vItemTemplate->InventoryType != INVTYPE_FINGER)
+            if (!IsInvTypeAccessory)
                 return false;
 
             break;
@@ -1468,16 +1428,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (!IsPhraseInString(vItemTemplate->Name1, "Wrathful"))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_WEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_SHIELD &&
-                vItemTemplate->InventoryType != INVTYPE_RANGED &&
-                vItemTemplate->InventoryType != INVTYPE_2HWEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONMAINHAND &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONOFFHAND &&
-                vItemTemplate->InventoryType != INVTYPE_HOLDABLE &&
-                vItemTemplate->InventoryType != INVTYPE_THROWN &&
-                vItemTemplate->InventoryType != INVTYPE_RANGEDRIGHT &&
-                vItemTemplate->InventoryType != INVTYPE_RELIC)
+            if (!IsInvTypeWeapon)
                 return false;
 
             break;
@@ -1493,14 +1444,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_CLOTH)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1516,14 +1460,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_LEATHER)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1539,14 +1476,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_MAIL)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1562,14 +1492,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (vItemTemplate->SubClass != ITEM_SUBCLASS_ARMOR_PLATE)
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_HEAD &&
-                vItemTemplate->InventoryType != INVTYPE_SHOULDERS &&
-                vItemTemplate->InventoryType != INVTYPE_CHEST &&
-                vItemTemplate->InventoryType != INVTYPE_HANDS &&
-                vItemTemplate->InventoryType != INVTYPE_LEGS &&
-                vItemTemplate->InventoryType != INVTYPE_WRISTS &&
-                vItemTemplate->InventoryType != INVTYPE_WAIST &&
-                vItemTemplate->InventoryType != INVTYPE_FEET)
+            if (!IsInvTypeArmor)
                 return false;
 
             break;
@@ -1579,9 +1502,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (IsPhraseInString(vItemTemplate->Name1, "Wrathful") || (vItemTemplate->ItemLevel != 264 && vItemTemplate->ItemLevel != 268))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_NECK &&
-                vItemTemplate->InventoryType != INVTYPE_CLOAK &&
-                vItemTemplate->InventoryType != INVTYPE_FINGER)
+            if (!IsInvTypeAccessory)
                 return false;
 
             break;
@@ -1591,16 +1512,7 @@ bool MallInOne::CheckVendorItem(Player* player, const ItemTemplate* vItemTemplat
             if (IsPhraseInString(vItemTemplate->Name1, "Wrathful") || (vItemTemplate->ItemLevel != 264 && vItemTemplate->ItemLevel != 277))
                 return false;
 
-            if (vItemTemplate->InventoryType != INVTYPE_WEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_SHIELD &&
-                vItemTemplate->InventoryType != INVTYPE_RANGED &&
-                vItemTemplate->InventoryType != INVTYPE_2HWEAPON &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONMAINHAND &&
-                vItemTemplate->InventoryType != INVTYPE_WEAPONOFFHAND &&
-                vItemTemplate->InventoryType != INVTYPE_HOLDABLE &&
-                vItemTemplate->InventoryType != INVTYPE_THROWN &&
-                vItemTemplate->InventoryType != INVTYPE_RANGEDRIGHT &&
-                vItemTemplate->InventoryType != INVTYPE_RELIC)
+            if (!IsInvTypeWeapon)
                 return false;
 
             break;

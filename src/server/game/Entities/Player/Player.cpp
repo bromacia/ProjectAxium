@@ -56,8 +56,6 @@
 #include <cmath>
 #include "AccountMgr.h"
 #include "DuelMgr.h"
-#include "../../../scripts/Custom/MallInOne.h"
-#include "../../../scripts/Custom/Transmogrifier.h"
 
 #define ZONE_UPDATE_INTERVAL (1*IN_MILLISECONDS)
 
@@ -16538,7 +16536,7 @@ void Player::_LoadPvPStats()
     m_Lifetime5v5MMR = fields[9].GetUInt16();
     m_Lifetime5v5Wins = fields[10].GetUInt16();
     m_Lifetime5v5Games = fields[11].GetUInt16();
-                                                 
+
 }
 
 void Player::_LoadEquipmentSets(PreparedQueryResult result)
@@ -21045,7 +21043,7 @@ bool Player::BuyItemFromVendorSlot(uint64 vendorguid, uint32 vendorslot, uint32 
 
     if (creature->IsTransmogrifier())
     {
-        Transmogrifier::TransmogrifyItem(this, item, crItem);
+        TransmogrifyItem(item);
         return false;
     }
 
@@ -25575,6 +25573,129 @@ void Player::Demorph(bool native)
     native ? SetDisplayId(GetNativeDisplayId()) : RestoreDisplayId();
 }
 
+bool Player::CheckItem(const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate)
+{
+    // Faction specific items
+    if ((vItemTemplate->Flags2 == ITEM_FLAGS_EXTRA_ALLIANCE_ONLY && GetTeam() == HORDE) ||
+        (vItemTemplate->Flags2 == ITEM_FLAGS_EXTRA_HORDE_ONLY && GetTeam() == ALLIANCE))
+        return false;
+
+    // Class specific items
+    if (!(vItemTemplate->AllowableClass & getClassMask()))
+        return false;
+
+    if (vItemTemplate->Class == ITEM_CLASS_ARMOR)
+    {
+        bool IsChestInvType = (vItemTemplate->InventoryType == INVTYPE_CHEST && pItemTemplate->InventoryType == INVTYPE_ROBE) || (vItemTemplate->InventoryType == INVTYPE_ROBE && pItemTemplate->InventoryType == INVTYPE_CHEST);
+        if (vItemTemplate->Class != pItemTemplate->Class || vItemTemplate->SubClass != pItemTemplate->SubClass || (!IsChestInvType && vItemTemplate->InventoryType != pItemTemplate->InventoryType))
+            return false;
+    }
+
+    if (vItemTemplate->Class == ITEM_CLASS_WEAPON)
+    {
+        if (vItemTemplate->Class != pItemTemplate->Class || vItemTemplate->SubClass != pItemTemplate->SubClass)
+            return false;
+
+        // Special case for Fist Weapons because the models for the right hand and left hand are different
+        if (vItemTemplate->SubClass == ITEM_SUBCLASS_WEAPON_FIST && vItemTemplate->InventoryType != pItemTemplate->InventoryType)
+            return false;
+    }
+
+    return true;
+}
+
+void Player::TransmogrifyItem(uint32 itemId)
+{
+    uint8 slot = GetSelectedTransmogItemSlot();
+
+    Item* item = GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+    if (!item)
+        return;
+
+    const ItemTemplate* pItemTemplate = GetItemByPos(INVENTORY_SLOT_BAG_0, slot)->GetTemplate();
+    if (!pItemTemplate)
+        return;
+
+    const ItemTemplate* vItemTemplate = sObjectMgr->GetItemTemplate(itemId);
+    if (!vItemTemplate)
+        return;
+
+    if (!CheckItem(vItemTemplate, pItemTemplate))
+        return;
+
+    if (!sObjectMgr->CheckExtendedCost2(this, vItemTemplate))
+    {
+        SendSysMessage("%s requires %s.", vItemTemplate->Name1.c_str(), sObjectMgr->CreateExtendedCost2ErrorMessage(vItemTemplate->ExtendedCost2).c_str());
+        return;
+    }
+
+    TransmogrifyItem(item, slot, vItemTemplate->ItemId);
+}
+
+void Player::TransmogrifyEnchant(uint16 enchantId)
+{
+    if (!enchantId)
+        return;
+
+    for (uint8 i = EQUIPMENT_SLOT_MAINHAND; i <= EQUIPMENT_SLOT_OFFHAND; ++i)
+    {
+        Item* item = GetItemByPos(INVENTORY_SLOT_BAG_0, (EquipmentSlots)i);
+        if (!item)
+            continue;
+
+        const ItemTemplate* itemTemplate = item->GetTemplate();
+        if (!itemTemplate)
+            continue;
+
+        if (itemTemplate->Class != ITEM_CLASS_WEAPON)
+            continue;
+
+        TransmogrifyEnchant(item, i, enchantId);
+    }
+}
+
+void Player::TransmogrifyItem(Item* item, uint16 slot, uint32 itemId)
+{
+    item->TransmogEntry = itemId;
+    SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), itemId);
+    TransmogItemInformation tItemInfo;
+    tItemInfo.TransmogEntry = item->TransmogEntry;
+    tItemInfo.TransmogEnchant = item->TransmogEnchant;
+    transmogItemsSaveQueue[item->GetGUIDLow()] = tItemInfo;
+}
+
+void Player::TransmogrifyEnchant(Item* item, uint16 slot, uint16 enchantId)
+{
+    item->TransmogEnchant = enchantId;
+    SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 0, enchantId);
+    SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 1, enchantId);
+    TransmogItemInformation tItemInfo;
+    tItemInfo.TransmogEntry = item->TransmogEntry;
+    tItemInfo.TransmogEnchant = item->TransmogEnchant;
+    transmogItemsSaveQueue[item->GetGUIDLow()] = tItemInfo;
+}
+
+void Player::UntransmogrifyItem(Item* item, uint16 slot)
+{
+    item->TransmogEntry = 0;
+    SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), item->GetEntry());
+    TransmogItemInformation tItemInfo;
+    tItemInfo.TransmogEntry = 0;
+    tItemInfo.TransmogEnchant = item->TransmogEnchant;
+    transmogItemsSaveQueue[item->GetGUIDLow()] = tItemInfo;
+}
+
+void Player::UntransmogrifyEnchant(Item* item, uint16 slot)
+{
+    item->TransmogEnchant = 0;
+    SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 0, item->GetEnchantmentId(PERM_ENCHANTMENT_SLOT));
+    SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 1, item->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT));
+    TransmogItemInformation tItemInfo;
+    tItemInfo.TransmogEntry = item->TransmogEntry;
+    tItemInfo.TransmogEnchant = 0;
+    transmogItemsSaveQueue[item->GetGUIDLow()] = tItemInfo;
+}
+
 void Player::_SaveTransmogItems()
 {
     for (TransmogItemsSaveQueue::iterator itr = transmogItemsSaveQueue.begin(); itr != transmogItemsSaveQueue.end(); ++itr)
@@ -25999,7 +26120,7 @@ void Player::RemoveFromAllBattlegroundQueues()
         return;
 
     for (uint8 bgQueueItr = BATTLEGROUND_QUEUE_NONE; bgQueueItr < MAX_BATTLEGROUND_QUEUE_TYPES; ++bgQueueItr)
-    { 
+    {
         BattlegroundQueueTypeId bgQueueTypeId = (BattlegroundQueueTypeId)bgQueueItr;
         BattlegroundQueue& bgQueue = sBattlegroundMgr->m_BattlegroundQueues[bgQueueTypeId];
         GroupQueueInfo ginfo;

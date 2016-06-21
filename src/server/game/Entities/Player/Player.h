@@ -2598,6 +2598,15 @@ class Player : public Unit, public GridObject<Player>
         uint32 GetMorphId() const { return m_MorphId; }
         void SetMorphId(uint32 id) { m_MorphId = id; }
 
+        bool CheckItem(const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate);
+        void TransmogrifyItem(uint32 itemId);
+        void TransmogrifyEnchant(uint16 enchantId);
+
+        void TransmogrifyItem(Item* item, uint16 slot, uint32 itemId);
+        void TransmogrifyEnchant(Item* item, uint16 slot, uint16 enchantId);
+        void UntransmogrifyItem(Item* item, uint16 slot);
+        void UntransmogrifyEnchant(Item* item, uint16 slot);
+
         uint8 GetSelectedTransmogItemSlot() const { return m_selectedTransmogItemSlot; }
         void SetSelectedTransmogItemSlot(uint8 slot) { m_selectedTransmogItemSlot = slot; }
 

@@ -1304,6 +1304,7 @@ class Unit : public WorldObject
         void SendMeleeAttackStart(Unit* pVictim);
 
         void AddUnitState(uint32 f) { m_state |= f; }
+        uint32 GetUnitState() { return m_state; }
         bool HasUnitState(const uint32 f) const { return (m_state & f); }
         void ClearUnitState(uint32 f) { m_state &= ~f; }
         bool CanFreeMove() const

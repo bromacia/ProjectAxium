@@ -12,28 +12,32 @@ class utility_commandscript : public CommandScript
         {
             static ChatCommand utilityCommandTable[] =
             {
-                { "customize",        SEC_PLAYER,         false, &HandleCustomizeCommand,                 "", NULL },
-                { "race",             SEC_PLAYER,         false, &HandleRaceCommand,                      "", NULL },
-                { "faction",          SEC_PLAYER,         false, &HandleFactionCommand,                   "", NULL },
-                { "prepare",          SEC_GAMEMASTER,     false, &HandlePrepareCommand,                   "", NULL },
-                { "barbershop",       SEC_PLAYER,         false, &HandleBarbershopCommand,                "", NULL },
-                { "sendcooldown",     SEC_GAMEMASTER,     false, &HandleSendCooldownCommand,              "", NULL },
-                { "transmogcopygear", SEC_GAMEMASTER,     false, &HandleTransmogCopyGearCommand,          "", NULL },
-                { "transmogsendgear", SEC_GAMEMASTER,     false, &HandleTransmogSendGearCommand,          "", NULL },
-                { "warp",             SEC_GAMEMASTER,     false, &HandleWarpCommand,                      "", NULL },
-                { "setviewpoint",     SEC_GAMEMASTER,     false, &HandleSetViewpointCommand,              "", NULL },
-                { "restoreviewpoint", SEC_GAMEMASTER,     false, &HandleRestoreViewpointCommand,          "", NULL },
-                { "speed",            SEC_GAMEMASTER,     false, &HandleSpeedCommand,                     "", NULL },
-                { "movementflags",    SEC_GAMEMASTER,     false, &HandleMovementFlagsCommand,             "", NULL },
-                { "unitstate",        SEC_GAMEMASTER,     false, &HandleUnitStateCommand,                 "", NULL },
-                { "splineinfo",       SEC_GAMEMASTER,     false, &HandleSplineInfoCommand,                "", NULL },
-                { "itemid",           SEC_GAMEMASTER,     false, &HandleItemIdCommand,                    "", NULL },
-                { "spellid",          SEC_GAMEMASTER,     false, &HandleSpellIdCommand,                   "", NULL },
-                { "coeff",            SEC_GAMEMASTER,     false, &HandleCoeffCommand,                     "", NULL },
-                { "bank",             SEC_PLAYER,         false, &HandleBankCommand,                      "", NULL },
-                { "mailbox",          SEC_PLAYER,         false, &HandleMailboxCommand,                   "", NULL },
-                { "commentator",      SEC_GAMEMASTER,     false, &HandleCommentatorCommand,               "", NULL },
-                { NULL,               0,                  false, NULL,                                    "", NULL }
+                { "customize",              SEC_PLAYER,         false, &HandleCustomizeCommand,                 "", NULL },
+                { "race",                   SEC_PLAYER,         false, &HandleRaceCommand,                      "", NULL },
+                { "faction",                SEC_PLAYER,         false, &HandleFactionCommand,                   "", NULL },
+                { "prepare",                SEC_GAMEMASTER,     false, &HandlePrepareCommand,                   "", NULL },
+                { "barbershop",             SEC_PLAYER,         false, &HandleBarbershopCommand,                "", NULL },
+                { "sendcooldown",           SEC_GAMEMASTER,     false, &HandleSendCooldownCommand,              "", NULL },
+                { "transmogrifyitem",       SEC_GAMEMASTER,     false, &HandleTransmogrifyItemCommand,          "", NULL },
+                { "transmogrifyenchant",    SEC_GAMEMASTER,     false, &HandleTransmogrifyEnchantCommand,       "", NULL },
+                { "untransmogrifyitem",     SEC_GAMEMASTER,     false, &HandleUntransmogrifyItemCommand,        "", NULL },
+                { "untransmogrifyenchant",  SEC_GAMEMASTER,     false, &HandleUntransmogrifyEnchantCommand,     "", NULL },
+                { "transmogcopygear",       SEC_GAMEMASTER,     false, &HandleTransmogCopyGearCommand,          "", NULL },
+                { "transmogsendgear",       SEC_GAMEMASTER,     false, &HandleTransmogSendGearCommand,          "", NULL },
+                { "warp",                   SEC_GAMEMASTER,     false, &HandleWarpCommand,                      "", NULL },
+                { "setviewpoint",           SEC_GAMEMASTER,     false, &HandleSetViewpointCommand,              "", NULL },
+                { "restoreviewpoint",       SEC_GAMEMASTER,     false, &HandleRestoreViewpointCommand,          "", NULL },
+                { "speed",                  SEC_GAMEMASTER,     false, &HandleSpeedCommand,                     "", NULL },
+                { "movementflags",          SEC_GAMEMASTER,     false, &HandleMovementFlagsCommand,             "", NULL },
+                { "unitstate",              SEC_GAMEMASTER,     false, &HandleUnitStateCommand,                 "", NULL },
+                { "splineinfo",             SEC_GAMEMASTER,     false, &HandleSplineInfoCommand,                "", NULL },
+                { "itemid",                 SEC_GAMEMASTER,     false, &HandleItemIdCommand,                    "", NULL },
+                { "spellid",                SEC_GAMEMASTER,     false, &HandleSpellIdCommand,                   "", NULL },
+                { "coeff",                  SEC_GAMEMASTER,     false, &HandleCoeffCommand,                     "", NULL },
+                { "bank",                   SEC_PLAYER,         false, &HandleBankCommand,                      "", NULL },
+                { "mailbox",                SEC_PLAYER,         false, &HandleMailboxCommand,                   "", NULL },
+                { "commentator",            SEC_GAMEMASTER,     false, &HandleCommentatorCommand,               "", NULL },
+                { NULL,                     0,                  false, NULL,                                    "", NULL }
             };
             static ChatCommand commandTable[] =
             {
@@ -193,9 +197,151 @@ class utility_commandscript : public CommandScript
             return true;
         }
 
+        static bool HandleTransmogrifyItemCommand(ChatHandler* handler, const char* args)
+        {
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+            {
+                handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+                handler->SetSentErrorMessage(true);
+                return false;
+            }
+
+            uint64 targetGuid = target->GetGUID();
+
+            if (!*args)
+                return false;
+
+            char* slotArg = strtok((char*)args, " ");
+            if (!slotArg)
+                return false;
+
+            uint8 slot = (uint32)atoi(slotArg);
+            if (!slot)
+                return false;
+
+            Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+            if (!item)
+                return false;
+
+            char* itemArg = strtok(NULL, " ");
+            if (!itemArg)
+                return false;
+
+            uint32 itemId = handler->extractItemIdFromLink(itemArg);
+            if (!itemId)
+                return false;
+
+            target->TransmogrifyItem(item, slot, itemId);
+            return true;
+        }
+
+        static bool HandleTransmogrifyEnchantCommand(ChatHandler* handler, const char* args)
+        {
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+            {
+                handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+                handler->SetSentErrorMessage(true);
+                return false;
+            }
+
+            uint64 targetGuid = target->GetGUID();
+
+            if (!*args)
+                return false;
+
+            char* slotArg = strtok((char*)args, " ");
+            if (!slotArg)
+                return false;
+
+            uint8 slot = (uint32)atoi(slotArg);
+            if (!slot)
+                return false;
+
+            Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+            if (!item)
+                return false;
+
+            char* enchantIdArg = strtok(NULL, " ");
+            if (!enchantIdArg)
+                return false;
+
+            uint16 enchantId = (uint16)atoi(enchantIdArg);
+            if (!enchantId)
+                return false;
+
+            target->TransmogrifyEnchant(item, slot, enchantId);
+            return true;
+        }
+
+        static bool HandleUntransmogrifyItemCommand(ChatHandler* handler, const char* args)
+        {
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+            {
+                handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+                handler->SetSentErrorMessage(true);
+                return false;
+            }
+
+            uint64 targetGuid = target->GetGUID();
+
+            if (!*args)
+                return false;
+
+            char* slotArg = strtok((char*)args, " ");
+            if (!slotArg)
+                return false;
+
+            uint8 slot = (uint32)atoi(slotArg);
+            if (!slot)
+                return false;
+
+            Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+            if (!item)
+                return false;
+
+            target->UntransmogrifyItem(item, slot);
+            return true;
+        }
+
+        static bool HandleUntransmogrifyEnchantCommand(ChatHandler* handler, const char* args)
+        {
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+            {
+                handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+                handler->SetSentErrorMessage(true);
+                return false;
+            }
+
+            uint64 targetGuid = target->GetGUID();
+
+            if (!*args)
+                return false;
+
+            char* slotArg = strtok((char*)args, " ");
+            if (!slotArg)
+                return false;
+
+            uint8 slot = (uint32)atoi(slotArg);
+            if (!slot)
+                return false;
+
+            Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+            if (!item)
+                return false;
+
+            target->UntransmogrifyEnchant(item, slot);
+            return true;
+        }
+
         static bool HandleTransmogCopyGearCommand(ChatHandler* handler, const char* /*args*/)
         {
-            Unit *unitTarget = handler->getSelectedUnit();
+            Unit* unitTarget = handler->getSelectedUnit();
+            if (!unitTarget)
+                return false;
 
             if (unitTarget->GetTypeId() != TYPEID_PLAYER)
             {
@@ -205,54 +351,47 @@ class utility_commandscript : public CommandScript
             }
 
             Player* player = handler->GetSession()->GetPlayer();
+            if (!player)
+                return false;
+
             Player* target = unitTarget->ToPlayer();
+            if (!target)
+                return false;
 
             for (uint8 slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
             {
-                if (Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-                    if (Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-                    {
-                        if (slot == EQUIPMENT_SLOT_HEAD ||
-                            slot == EQUIPMENT_SLOT_SHOULDERS ||
-                            slot == EQUIPMENT_SLOT_CHEST ||
-                            slot == EQUIPMENT_SLOT_HANDS ||
-                            slot == EQUIPMENT_SLOT_LEGS ||
-                            slot == EQUIPMENT_SLOT_WRISTS ||
-                            slot == EQUIPMENT_SLOT_WAIST ||
-                            slot == EQUIPMENT_SLOT_FEET ||
-                            slot == EQUIPMENT_SLOT_MAINHAND ||
-                            slot == EQUIPMENT_SLOT_OFFHAND ||
-                            slot == EQUIPMENT_SLOT_RANGED)
-                        {
-                            if (targetItem->TransmogEntry)
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEntry = %u WHERE guid = %u", targetItem->TransmogEntry, playerItem->GetGUIDLow());
-                                playerItem->TransmogEntry = targetItem->TransmogEntry;
-                                player->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), targetItem->TransmogEntry);
-                            }
-                            else
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEntry = %u WHERE guid = %u", targetItem->GetEntry(), playerItem->GetGUIDLow());
-                                playerItem->TransmogEntry = targetItem->GetEntry();
-                                player->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), targetItem->GetEntry());
-                            }
+                if (slot == EQUIPMENT_SLOT_HEAD     || slot == EQUIPMENT_SLOT_SHOULDERS ||
+                    slot == EQUIPMENT_SLOT_CHEST    || slot == EQUIPMENT_SLOT_HANDS ||
+                    slot == EQUIPMENT_SLOT_LEGS     || slot == EQUIPMENT_SLOT_WRISTS ||
+                    slot == EQUIPMENT_SLOT_WAIST    || slot == EQUIPMENT_SLOT_FEET ||
+                    slot == EQUIPMENT_SLOT_MAINHAND || slot == EQUIPMENT_SLOT_OFFHAND ||
+                    slot == EQUIPMENT_SLOT_RANGED)
+                {
+                    Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!playerItem)
+                        continue;
 
-                            if (targetItem->TransmogEnchant)
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEnchant = %u WHERE guid = %u", targetItem->TransmogEnchant, playerItem->GetGUIDLow());
-                                playerItem->TransmogEnchant = targetItem->TransmogEnchant;
-                                player->SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 0, targetItem->TransmogEnchant);
-                                player->SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 1, targetItem->TransmogEnchant);
-                            }
-                        }
-                    }
+                    Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!targetItem)
+                        continue;
+
+                    uint32 itemId = targetItem->TransmogEntry ? targetItem->TransmogEntry : targetItem->GetEntry();
+                    if (itemId)
+                        player->TransmogrifyItem(playerItem, slot, itemId);
+
+                    uint16 enchantId = targetItem->TransmogEnchant ? targetItem->TransmogEnchant : 0;
+                    if (enchantId)
+                        player->TransmogrifyEnchant(playerItem, slot, enchantId);
+                }
             }
             return true;
         }
 
         static bool HandleTransmogSendGearCommand(ChatHandler* handler, const char* /*args*/)
         {
-            Unit *unitTarget = handler->getSelectedUnit();
+            Unit* unitTarget = handler->getSelectedUnit();
+            if (!unitTarget)
+                return false;
 
             if (unitTarget->GetTypeId() != TYPEID_PLAYER)
             {
@@ -262,47 +401,38 @@ class utility_commandscript : public CommandScript
             }
 
             Player* player = handler->GetSession()->GetPlayer();
+            if (!player)
+                return false;
+
             Player* target = unitTarget->ToPlayer();
+            if (!target)
+                return false;
 
             for (uint8 slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
             {
-                if (Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-                    if (Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-                    {
-                        if (slot == EQUIPMENT_SLOT_HEAD ||
-                            slot == EQUIPMENT_SLOT_SHOULDERS ||
-                            slot == EQUIPMENT_SLOT_CHEST ||
-                            slot == EQUIPMENT_SLOT_HANDS ||
-                            slot == EQUIPMENT_SLOT_LEGS ||
-                            slot == EQUIPMENT_SLOT_WRISTS ||
-                            slot == EQUIPMENT_SLOT_WAIST ||
-                            slot == EQUIPMENT_SLOT_FEET ||
-                            slot == EQUIPMENT_SLOT_MAINHAND ||
-                            slot == EQUIPMENT_SLOT_OFFHAND ||
-                            slot == EQUIPMENT_SLOT_RANGED)
-                        {
-                            if (playerItem->TransmogEntry)
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEntry = %u WHERE guid = %u", playerItem->TransmogEntry, targetItem->GetGUIDLow());
-                                targetItem->TransmogEntry = playerItem->TransmogEntry;
-                                target->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), playerItem->TransmogEntry);
-                            }
-                            else
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEntry = %u WHERE guid = %u", playerItem->GetEntry(), targetItem->GetGUIDLow());
-                                targetItem->TransmogEntry = playerItem->GetEntry();
-                                target->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * 2), playerItem->GetEntry());
-                            }
+                if (slot == EQUIPMENT_SLOT_HEAD || slot == EQUIPMENT_SLOT_SHOULDERS ||
+                    slot == EQUIPMENT_SLOT_CHEST || slot == EQUIPMENT_SLOT_HANDS ||
+                    slot == EQUIPMENT_SLOT_LEGS || slot == EQUIPMENT_SLOT_WRISTS ||
+                    slot == EQUIPMENT_SLOT_WAIST || slot == EQUIPMENT_SLOT_FEET ||
+                    slot == EQUIPMENT_SLOT_MAINHAND || slot == EQUIPMENT_SLOT_OFFHAND ||
+                    slot == EQUIPMENT_SLOT_RANGED)
+                {
+                    Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!playerItem)
+                        continue;
 
-                            if (playerItem->TransmogEnchant)
-                            {
-                                CharacterDatabase.PExecute("UPDATE item_instance SET TransmogEnchant = %u WHERE guid = %u", playerItem->TransmogEnchant, playerItem->GetGUIDLow());
-                                targetItem->TransmogEnchant = playerItem->TransmogEnchant;
-                                target->SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 0, playerItem->TransmogEnchant);
-                                target->SetUInt16Value(PLAYER_VISIBLE_ITEM_1_ENCHANTMENT + (slot * 2), 1, playerItem->TransmogEnchant);
-                            }
-                        }
-                    }
+                    Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!targetItem)
+                        continue;
+
+                    uint32 itemId = playerItem->TransmogEntry ? playerItem->TransmogEntry : playerItem->GetEntry();
+                    if (itemId)
+                        target->TransmogrifyItem(targetItem, slot, itemId);
+
+                    uint16 enchantId = playerItem->TransmogEnchant ? playerItem->TransmogEnchant : 0;
+                    if (enchantId)
+                        target->TransmogrifyEnchant(targetItem, slot, enchantId);
+                }
             }
             return true;
         }
@@ -399,16 +529,53 @@ class utility_commandscript : public CommandScript
 
             switch (moveType)
             {
-                case MOVE_WALK:        speed = target->GetSpeed(MOVE_WALK);        speedRate = target->GetSpeedRate(MOVE_WALK);        moveTypeString = "MOVE_WALK";        break;
-                case MOVE_RUN:         speed = target->GetSpeed(MOVE_RUN);         speedRate = target->GetSpeedRate(MOVE_RUN);         moveTypeString = "MOVE_RUN";         break;
-                case MOVE_RUN_BACK:    speed = target->GetSpeed(MOVE_RUN_BACK);    speedRate = target->GetSpeedRate(MOVE_RUN_BACK);    moveTypeString = "MOVE_RUN_BACK";    break;
-                case MOVE_SWIM:        speed = target->GetSpeed(MOVE_SWIM);        speedRate = target->GetSpeedRate(MOVE_SWIM);        moveTypeString = "MOVE_SWIM";        break;
-                case MOVE_SWIM_BACK:   speed = target->GetSpeed(MOVE_SWIM_BACK);   speedRate = target->GetSpeedRate(MOVE_SWIM_BACK);   moveTypeString = "MOVE_SWIM_BACK";   break;
-                case MOVE_TURN_RATE:   speed = target->GetSpeed(MOVE_TURN_RATE);   speedRate = target->GetSpeedRate(MOVE_TURN_RATE);   moveTypeString = "MOVE_TURN_RATE";   break;
-                case MOVE_FLIGHT:      speed = target->GetSpeed(MOVE_FLIGHT);      speedRate = target->GetSpeedRate(MOVE_FLIGHT);      moveTypeString = "MOVE_FLIGHT";      break;
-                case MOVE_FLIGHT_BACK: speed = target->GetSpeed(MOVE_FLIGHT_BACK); speedRate = target->GetSpeedRate(MOVE_FLIGHT_BACK); moveTypeString = "MOVE_FLIGHT_BACK"; break;
-                case MOVE_PITCH_RATE:  speed = target->GetSpeed(MOVE_PITCH_RATE);  speedRate = target->GetSpeedRate(MOVE_PITCH_RATE);  moveTypeString = "MOVE_PITCH_RATE";  break;
-                default: break;
+                case MOVE_WALK:
+                    speed = target->GetSpeed(MOVE_WALK);
+                    speedRate = target->GetSpeedRate(MOVE_WALK);
+                    moveTypeString = "MOVE_WALK";
+                    break;
+                case MOVE_RUN:
+                    speed = target->GetSpeed(MOVE_RUN);
+                    speedRate = target->GetSpeedRate(MOVE_RUN);
+                    moveTypeString = "MOVE_RUN";
+                    break;
+                case MOVE_RUN_BACK:
+                    speed = target->GetSpeed(MOVE_RUN_BACK);
+                    speedRate = target->GetSpeedRate(MOVE_RUN_BACK);
+                    moveTypeString = "MOVE_RUN_BACK";
+                    break;
+                case MOVE_SWIM:
+                    speed = target->GetSpeed(MOVE_SWIM);
+                    speedRate = target->GetSpeedRate(MOVE_SWIM);
+                    moveTypeString = "MOVE_SWIM";
+                    break;
+                case MOVE_SWIM_BACK:
+                    speed = target->GetSpeed(MOVE_SWIM_BACK);
+                    speedRate = target->GetSpeedRate(MOVE_SWIM_BACK);
+                    moveTypeString = "MOVE_SWIM_BACK";
+                    break;
+                case MOVE_TURN_RATE:
+                    speed = target->GetSpeed(MOVE_TURN_RATE);
+                    speedRate = target->GetSpeedRate(MOVE_TURN_RATE);
+                    moveTypeString = "MOVE_TURN_RATE";
+                    break;
+                case MOVE_FLIGHT:
+                    speed = target->GetSpeed(MOVE_FLIGHT);
+                    speedRate = target->GetSpeedRate(MOVE_FLIGHT);
+                    moveTypeString = "MOVE_FLIGHT";
+                    break;
+                case MOVE_FLIGHT_BACK:
+                    speed = target->GetSpeed(MOVE_FLIGHT_BACK);
+                    speedRate = target->GetSpeedRate(MOVE_FLIGHT_BACK);
+                    moveTypeString = "MOVE_FLIGHT_BACK";
+                    break;
+                case MOVE_PITCH_RATE:
+                    speed = target->GetSpeed(MOVE_PITCH_RATE);
+                    speedRate = target->GetSpeedRate(MOVE_PITCH_RATE);
+                    moveTypeString = "MOVE_PITCH_RATE";
+                    break;
+                default:
+                    break;
             }
 
             handler->PSendSysMessage("Target: %s, Move Type: %s", target->GetName(), moveTypeString.c_str());
@@ -422,8 +589,8 @@ class utility_commandscript : public CommandScript
             Unit* target = handler->getSelectedUnit();
             if (!target)
                 target = handler->GetSession()->GetPlayer();
-            uint32 moveFlags = target->m_movementInfo.GetMovementFlags();
 
+            uint32 moveFlags = target->m_movementInfo.GetMovementFlags();
             handler->PSendSysMessage("Target: %s has movementflag(s):", target->GetName());
 
             if (!moveFlags)
@@ -434,96 +601,70 @@ class utility_commandscript : public CommandScript
 
             if (moveFlags & MOVEMENTFLAG_FORWARD)
                 handler->PSendSysMessage("MOVEMENTFLAG_FORWARD");
-
-            if (moveFlags & MOVEMENTFLAG_BACKWARD)
+            else if (moveFlags & MOVEMENTFLAG_BACKWARD)
                 handler->PSendSysMessage("MOVEMENTFLAG_BACKWARD");
-
-            if (moveFlags & MOVEMENTFLAG_STRAFE_LEFT)
+            else if (moveFlags & MOVEMENTFLAG_STRAFE_LEFT)
                 handler->PSendSysMessage("MOVEMENTFLAG_STRAFE_LEFT");
-
-            if (moveFlags & MOVEMENTFLAG_STRAFE_RIGHT)
+            else if (moveFlags & MOVEMENTFLAG_STRAFE_RIGHT)
                 handler->PSendSysMessage("MOVEMENTFLAG_STRAFE_RIGHT");
-
-            if (moveFlags & MOVEMENTFLAG_LEFT)
+            else if (moveFlags & MOVEMENTFLAG_LEFT)
                 handler->PSendSysMessage("MOVEMENTFLAG_LEFT");
-
-            if (moveFlags & MOVEMENTFLAG_RIGHT)
+            else if (moveFlags & MOVEMENTFLAG_RIGHT)
                 handler->PSendSysMessage("MOVEMENTFLAG_RIGHT");
-
-            if (moveFlags & MOVEMENTFLAG_PITCH_UP)
+            else if (moveFlags & MOVEMENTFLAG_PITCH_UP)
                 handler->PSendSysMessage("MOVEMENTFLAG_PITCH_UP");
-
-            if (moveFlags & MOVEMENTFLAG_PITCH_DOWN)
+            else if (moveFlags & MOVEMENTFLAG_PITCH_DOWN)
                 handler->PSendSysMessage("MOVEMENTFLAG_PITCH_DOWN");
-
-            if (moveFlags & MOVEMENTFLAG_WALKING)
+            else if (moveFlags & MOVEMENTFLAG_WALKING)
                 handler->PSendSysMessage("MOVEMENTFLAG_WALKING");
-
-            if (moveFlags & MOVEMENTFLAG_ONTRANSPORT)
+            else if (moveFlags & MOVEMENTFLAG_ONTRANSPORT)
                 handler->PSendSysMessage("MOVEMENTFLAG_ONTRANSPORT");
-
-            if (moveFlags & MOVEMENTFLAG_LEVITATING)
+            else if (moveFlags & MOVEMENTFLAG_LEVITATING)
                 handler->PSendSysMessage("MOVEMENTFLAG_LEVITATING");
-
-            if (moveFlags & MOVEMENTFLAG_ROOT)
+            else if (moveFlags & MOVEMENTFLAG_ROOT)
                 handler->PSendSysMessage("MOVEMENTFLAG_ROOT");
-
-            if (moveFlags & MOVEMENTFLAG_JUMPING)
+            else if (moveFlags & MOVEMENTFLAG_JUMPING)
                 handler->PSendSysMessage("MOVEMENTFLAG_JUMPING");
-
-            if (moveFlags & MOVEMENTFLAG_FALLING)
+            else if (moveFlags & MOVEMENTFLAG_FALLING)
                 handler->PSendSysMessage("MOVEMENTFLAG_FALLING");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_STOP)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_STOP)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_STOP");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_STOP)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_STOP)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_STRAFE_STOP");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_FORWARD)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_FORWARD)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_FORWARD");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_BACKWARD)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_BACKWARD)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_BACKWARD");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_LEFT)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_LEFT)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_STRAFE_LEFT");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_RIGHT)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_STRAFE_RIGHT)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_STRAFE_RIGHT");
-
-            if (moveFlags & MOVEMENTFLAG_PENDING_ROOT)
+            else if (moveFlags & MOVEMENTFLAG_PENDING_ROOT)
                 handler->PSendSysMessage("MOVEMENTFLAG_PENDING_ROOT");
-
-            if (moveFlags & MOVEMENTFLAG_SWIMMING)
+            else if (moveFlags & MOVEMENTFLAG_SWIMMING)
                 handler->PSendSysMessage("MOVEMENTFLAG_SWIMMING");
-
-            if (moveFlags & MOVEMENTFLAG_ASCENDING)
+            else if (moveFlags & MOVEMENTFLAG_ASCENDING)
                 handler->PSendSysMessage("MOVEMENTFLAG_ASCENDING");
-
-            if (moveFlags & MOVEMENTFLAG_DESCENDING)
+            else if (moveFlags & MOVEMENTFLAG_DESCENDING)
                 handler->PSendSysMessage("MOVEMENTFLAG_DESCENDING");
-
-            if (moveFlags & MOVEMENTFLAG_CAN_FLY)
+            else if (moveFlags & MOVEMENTFLAG_CAN_FLY)
                 handler->PSendSysMessage("MOVEMENTFLAG_CAN_FLY");
-
-            if (moveFlags & MOVEMENTFLAG_FLYING)
+            else if (moveFlags & MOVEMENTFLAG_FLYING)
                 handler->PSendSysMessage("MOVEMENTFLAG_FLYING");
-
-            if (moveFlags & MOVEMENTFLAG_SPLINE_ELEVATION)
+            else if (moveFlags & MOVEMENTFLAG_SPLINE_ELEVATION)
                 handler->PSendSysMessage("MOVEMENTFLAG_SPLINE_ELEVATION");
-
-            if (moveFlags & MOVEMENTFLAG_SPLINE_ENABLED)
+            else if (moveFlags & MOVEMENTFLAG_SPLINE_ENABLED)
                 handler->PSendSysMessage("MOVEMENTFLAG_SPLINE_ENABLED");
-
-            if (moveFlags & MOVEMENTFLAG_WATERWALKING)
+            else if (moveFlags & MOVEMENTFLAG_WATERWALKING)
                 handler->PSendSysMessage("MOVEMENTFLAG_WATERWALKING");
-
-            if (moveFlags & MOVEMENTFLAG_FALLING_SLOW)
+            else if (moveFlags & MOVEMENTFLAG_FALLING_SLOW)
                 handler->PSendSysMessage("MOVEMENTFLAG_FALLING_SLOW");
-
-            if (moveFlags & MOVEMENTFLAG_HOVER)
+            else if (moveFlags & MOVEMENTFLAG_HOVER)
                 handler->PSendSysMessage("MOVEMENTFLAG_HOVER");
+            else if (moveFlags & MOVEMENTFLAG_MASK_MOVING)
+                handler->PSendSysMessage("MOVEMENTFLAG_MASK_MOVING");
+            else if (moveFlags & MOVEMENTFLAG_MASK_TURNING)
+                handler->PSendSysMessage("MOVEMENTFLAG_MASK_TURNING");
 
             return true;
         }
@@ -534,112 +675,89 @@ class utility_commandscript : public CommandScript
             if (!target)
                 target = handler->GetSession()->GetPlayer();
 
+            uint32 unitState = target->GetUnitState();
+            if (!unitState)
+            {
+                handler->PSendSysMessage("Target: %s has no unit states", target->GetName());
+                return true;
+            }
+
             handler->PSendSysMessage("Target: %s has unit state(s):", target->GetName());
 
-            if (target->HasUnitState(UNIT_STATE_DIED))
+            if (unitState & UNIT_STATE_DIED)
                 handler->PSendSysMessage("UNIT_STATE_DIED");
-
-            if (target->HasUnitState(UNIT_STATE_MELEE_ATTACKING))
+            else if (unitState & UNIT_STATE_DIED)
+                handler->PSendSysMessage("UNIT_STATE_DIED");
+            else if (unitState & UNIT_STATE_MELEE_ATTACKING)
                 handler->PSendSysMessage("UNIT_STATE_MELEE_ATTACKING");
-
-            if (target->HasUnitState(UNIT_STATE_STUNNED))
+            else if (unitState & UNIT_STATE_STUNNED)
                 handler->PSendSysMessage("UNIT_STATE_STUNNED");
-
-            if (target->HasUnitState(UNIT_STATE_ROAMING))
+            else if (unitState & UNIT_STATE_ROAMING)
                 handler->PSendSysMessage("UNIT_STATE_ROAMING");
-
-            if (target->HasUnitState(UNIT_STATE_CHASE))
+            else if (unitState & UNIT_STATE_CHASE)
                 handler->PSendSysMessage("UNIT_STATE_CHASE");
-
-            if (target->HasUnitState(UNIT_STATE_FLEEING))
+            else if (unitState & UNIT_STATE_FLEEING)
                 handler->PSendSysMessage("UNIT_STATE_FLEEING");
-
-            if (target->HasUnitState(UNIT_STATE_IN_FLIGHT))
+            else if (unitState & UNIT_STATE_IN_FLIGHT)
                 handler->PSendSysMessage("UNIT_STATE_IN_FLIGHT");
-
-            if (target->HasUnitState(UNIT_STATE_FOLLOW))
+            else if (unitState & UNIT_STATE_FOLLOW)
                 handler->PSendSysMessage("UNIT_STATE_FOLLOW");
-
-            if (target->HasUnitState(UNIT_STATE_ROOT))
+            else if (unitState & UNIT_STATE_ROOT)
                 handler->PSendSysMessage("UNIT_STATE_ROOT");
-
-            if (target->HasUnitState(UNIT_STATE_CONFUSED))
+            else if (unitState & UNIT_STATE_CONFUSED)
                 handler->PSendSysMessage("UNIT_STATE_CONFUSED");
-
-            if (target->HasUnitState(UNIT_STATE_DISTRACTED))
+            else if (unitState & UNIT_STATE_DISTRACTED)
                 handler->PSendSysMessage("UNIT_STATE_DISTRACTED");
-
-            if (target->HasUnitState(UNIT_STATE_ISOLATED))
+            else if (unitState & UNIT_STATE_ISOLATED)
                 handler->PSendSysMessage("UNIT_STATE_ISOLATED");
-
-            if (target->HasUnitState(UNIT_STATE_ATTACK_PLAYER))
+            else if (unitState & UNIT_STATE_ATTACK_PLAYER)
                 handler->PSendSysMessage("UNIT_STATE_ATTACK_PLAYER");
-
-            if (target->HasUnitState(UNIT_STATE_CASTING))
+            else if (unitState & UNIT_STATE_CASTING)
                 handler->PSendSysMessage("UNIT_STATE_CASTING");
-
-            if (target->HasUnitState(UNIT_STATE_POSSESSED))
+            else if (unitState & UNIT_STATE_POSSESSED)
                 handler->PSendSysMessage("UNIT_STATE_POSSESSED");
-
-            if (target->HasUnitState(UNIT_STATE_CHARGING))
+            else if (unitState & UNIT_STATE_CHARGING)
                 handler->PSendSysMessage("UNIT_STATE_CHARGING");
-
-            if (target->HasUnitState(UNIT_STATE_JUMPING))
+            else if (unitState & UNIT_STATE_JUMPING)
                 handler->PSendSysMessage("UNIT_STATE_JUMPING");
-
-            if (target->HasUnitState(UNIT_STATE_ONVEHICLE))
+            else if (unitState & UNIT_STATE_ONVEHICLE)
                 handler->PSendSysMessage("UNIT_STATE_ONVEHICLE");
-
-            if (target->HasUnitState(UNIT_STATE_MOVE))
+            else if (unitState & UNIT_STATE_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_ROTATING))
+            else if (unitState & UNIT_STATE_ROTATING)
                 handler->PSendSysMessage("UNIT_STATE_ROTATING");
-
-            if (target->HasUnitState(UNIT_STATE_EVADE))
+            else if (unitState & UNIT_STATE_EVADE)
                 handler->PSendSysMessage("UNIT_STATE_EVADE");
-
-            if (target->HasUnitState(UNIT_STATE_ROAMING_MOVE))
+            else if (unitState & UNIT_STATE_ROAMING_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_ROAMING_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_CONFUSED_MOVE))
+            else if (unitState & UNIT_STATE_CONFUSED_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_CONFUSED_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_FLEEING_MOVE))
+            else if (unitState & UNIT_STATE_FLEEING_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_FLEEING_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_CHASE_MOVE))
+            else if (unitState & UNIT_STATE_CHASE_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_CHASE_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_FOLLOW_MOVE))
+            else if (unitState & UNIT_STATE_FOLLOW_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_FOLLOW_MOVE");
-
-            if (target->HasUnitState(UNIT_STATE_IGNORE_PATHFINDING))
+            else if (unitState & UNIT_STATE_IGNORE_PATHFINDING)
                 handler->PSendSysMessage("UNIT_STATE_IGNORE_PATHFINDING");
-
-            if (target->HasUnitState(UNIT_STATE_UNATTACKABLE))
+            else if (unitState & UNIT_STATE_UNATTACKABLE)
                 handler->PSendSysMessage("UNIT_STATE_UNATTACKABLE");
-
-            if (target->HasUnitState(UNIT_STATE_MOVING))
+            else if (unitState & UNIT_STATE_MOVING)
                 handler->PSendSysMessage("UNIT_STATE_MOVING");
-
-            if (target->HasUnitState(UNIT_STATE_CONTROLLED))
+            else if (unitState & UNIT_STATE_CONTROLLED)
                 handler->PSendSysMessage("UNIT_STATE_CONTROLLED");
-
-            if (target->HasUnitState(UNIT_STATE_LOST_CONTROL))
+            else if (unitState & UNIT_STATE_LOST_CONTROL)
                 handler->PSendSysMessage("UNIT_STATE_LOST_CONTROL");
-
-            if (target->HasUnitState(UNIT_STATE_SIGHTLESS))
+            else if (unitState & UNIT_STATE_SIGHTLESS)
                 handler->PSendSysMessage("UNIT_STATE_SIGHTLESS");
-
-            if (target->HasUnitState(UNIT_STATE_CANNOT_AUTOATTACK))
+            else if (unitState & UNIT_STATE_CANNOT_AUTOATTACK)
                 handler->PSendSysMessage("UNIT_STATE_CANNOT_AUTOATTACK");
-
-            if (target->HasUnitState(UNIT_STATE_CANNOT_TURN))
+            else if (unitState & UNIT_STATE_CANNOT_TURN)
                 handler->PSendSysMessage("UNIT_STATE_CANNOT_TURN");
-
-            if (target->HasUnitState(UNIT_STATE_NOT_MOVE))
+            else if (unitState & UNIT_STATE_NOT_MOVE)
                 handler->PSendSysMessage("UNIT_STATE_NOT_MOVE");
+            else if (unitState & UNIT_STATE_ALL_STATE)
+                handler->PSendSysMessage("UNIT_STATE_ALL_STATE");
 
             return true;
         }
@@ -683,32 +801,9 @@ class utility_commandscript : public CommandScript
             if (!*args)
                 return false;
 
-            uint32 itemId = 0;
-
-            if (args[0] == '[')
-            {
-                char* citemName = strtok((char*)args, "]");
-
-                if (citemName && citemName[0])
-                {
-                    std::string itemName = citemName+1;
-                    WorldDatabase.EscapeString(itemName);
-                    QueryResult result = WorldDatabase.PQuery("SELECT entry FROM item_template WHERE name = '%s'", itemName.c_str());
-                    if (!result)
-                        return false;
-
-                    itemId = result->Fetch()->GetUInt16();
-                }
-                else
-                    return false;
-            }
-            else
-            {
-                char* cId = handler->extractKeyFromLink((char*)args, "Hitem");
-                if (!cId)
-                    return false;
-                itemId = atol(cId);
-            }
+            uint32 itemId = handler->extractItemIdFromLink((char*)args);
+            if (!itemId)
+                return false;
 
             handler->PSendSysMessage("Item Id: %u", itemId);
             return true;

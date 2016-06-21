@@ -91,6 +91,7 @@ class ChatHandler
         char*     extractQuotedArg(char* args);
 
         uint32    extractSpellIdFromLink(char* text);
+        uint32    extractItemIdFromLink(char* text);
         uint64    extractGuidFromLink(char* text);
         GameTele const* extractGameTeleFromLink(char* text);
         bool GetPlayerGroupAndGUIDByName(const char* cname, Player* &player, Group* &group, uint64 &guid, bool offline = false);
