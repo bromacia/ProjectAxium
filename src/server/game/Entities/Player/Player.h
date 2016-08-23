@@ -2592,12 +2592,6 @@ class Player : public Unit, public GridObject<Player>
         bool IsMovementBlocked() const { return blockedMovement; }
         void SetMovementBlocked(bool x) { blockedMovement = x; }
 
-        void Morph(uint32 displayId);
-        void Demorph(bool native = false);
-
-        uint32 GetMorphId() const { return m_MorphId; }
-        void SetMorphId(uint32 id) { m_MorphId = id; }
-
         bool CheckItem(const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate);
         void TransmogrifyItem(uint32 itemId);
         void TransmogrifyEnchant(uint16 enchantId);
@@ -3052,8 +3046,6 @@ class Player : public Unit, public GridObject<Player>
         uint32 _pendingBindTimer;
 
         bool blockedMovement;
-
-        uint32 m_MorphId;
 
         uint8 m_selectedTransmogItemSlot;
 

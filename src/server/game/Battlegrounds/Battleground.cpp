@@ -1133,7 +1133,7 @@ void Battleground::AddPlayer(Player* player)
     // add arena specific auras
     if (isArena())
     {
-        player->Demorph();
+        player->RestoreDisplayId();
 
         if (team == ALLIANCE)                                // gold
         {

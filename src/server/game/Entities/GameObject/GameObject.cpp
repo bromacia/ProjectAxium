@@ -1588,13 +1588,6 @@ void GameObject::Use(Unit* user)
 
             Player* player = user->ToPlayer();
 
-            // Prevent client crashes
-            if (player->GetMorphId())
-            {
-                player->SendSysMessage("You can't do that while morphed");
-                return;
-            }
-
             // fallback, will always work
             player->TeleportTo(GetMapId(), GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT | TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET);
 

@@ -36,7 +36,6 @@ public:
             { "arena",              SEC_GAMEMASTER,     false, &HandleModifyArenaCommand,               "", NULL },
             { "drunk",              SEC_GAMEMASTER,     false, &HandleModifyDrunkCommand,               "", NULL },
             { "standstate",         SEC_GAMEMASTER,     false, &HandleModifyStandStateCommand,          "", NULL },
-            { "displayid",          SEC_GAMEMASTER,     false, &HandleModifyDisplayIdCommand,           "", NULL },
             { "mountid",            SEC_GAMEMASTER,     false, &HandleModifyMountIdCommand,             "", NULL },
             { "phase",              SEC_GAMEMASTER,     false, &HandleModifyPhaseCommand,               "", NULL },
             { "gender",             SEC_GAMEMASTER,     false, &HandleModifyGenderCommand,              "", NULL },
@@ -769,23 +768,6 @@ public:
         target->GetReputationMgr().SetReputation(factionEntry, amount);
         handler->PSendSysMessage(LANG_COMMAND_MODIFY_REP, factionEntry->name[handler->GetSessionDbcLocale()], factionId,
             handler->GetNameLink(target).c_str(), target->GetReputationMgr().GetReputation(factionEntry));
-        return true;
-    }
-
-    static bool HandleModifyDisplayIdCommand(ChatHandler* handler, const char* args)
-    {
-        if (!*args)
-            return false;
-
-        uint16 display_id = (uint16)atoi((char*)args);
-
-        Unit* target = handler->getSelectedUnit();
-        if (!target)
-            target = handler->GetSession()->GetPlayer();
-        else if (target->GetTypeId() == TYPEID_PLAYER && handler->HasLowerSecurity(target->ToPlayer(), 0))
-            return false;
-
-        target->SetDisplayId(display_id);
         return true;
     }
 

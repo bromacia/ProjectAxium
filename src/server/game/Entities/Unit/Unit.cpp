@@ -15812,18 +15812,7 @@ void Unit::RestoreDisplayId()
     else if (uint32 modelId = GetModelForForm(GetShapeshiftForm()))
         SetDisplayId(modelId);
     else
-    {
-        if (Player* player = ToPlayer())
-        {
-            if (uint32 morphId = player->GetMorphId())
-            {
-                SetDisplayId(morphId);
-                return;
-            }
-        }
-
         SetDisplayId(GetNativeDisplayId());
-    }
 }
 
 void Unit::ClearComboPointHolders()

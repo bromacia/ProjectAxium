@@ -132,13 +132,6 @@ class utility_commandscript : public CommandScript
         {
             Player* player = handler->GetSession()->GetPlayer();
 
-            if (player->GetMorphId())
-            {
-                handler->PSendSysMessage("You can't do that while morphed");
-                handler->SetSentErrorMessage(true);
-                return false;
-            }
-
             if (player->IsSitState())
             {
                 handler->PSendSysMessage("You cant do that while sitting");
