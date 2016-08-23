@@ -574,22 +574,52 @@ void WorldSession::HandleMirrorImageDataRequest(WorldPacket & recv_data)
     if (!creator)
         return;
 
+    Player* player = creator->ToPlayer();
+    ModelOverride* mo = nullptr;
+    if (player)
+        mo = player->GetModelOverride();
+
+    uint32 displayId = creator->GetDisplayId();
+    uint8 race = creator->getRace();
+    uint8 gender = creator->getGender();
+
+    if (mo && mo->IsOverrided())
+    {
+        displayId = mo->GetDisplayId();
+        race = mo->GetRace();
+        gender = mo->GetGender();
+    }
+
     WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
     data << uint64(guid);
-    data << uint32(creator->GetDisplayId());
-    data << uint8(creator->getRace());
-    data << uint8(creator->getGender());
+    data << uint32(displayId);
+    data << uint8(race);
+    data << uint8(gender);
     data << uint8(creator->getClass());
 
-    if (creator->GetTypeId() == TYPEID_PLAYER)
+    if (player)
     {
-        Player* player = creator->ToPlayer();
-        data << uint8(player->GetByteValue(PLAYER_BYTES, 0));   // skin
-        data << uint8(player->GetByteValue(PLAYER_BYTES, 1));   // face
-        data << uint8(player->GetByteValue(PLAYER_BYTES, 2));   // hair
-        data << uint8(player->GetByteValue(PLAYER_BYTES, 3));   // haircolor
-        data << uint8(player->GetByteValue(PLAYER_BYTES_2, 0)); // facialhair
-        data << uint32(player->GetGuildId());                   // unk
+        uint8 skin = player->GetByteValue(PLAYER_BYTES, 0);
+        uint8 face = player->GetByteValue(PLAYER_BYTES, 1);
+        uint8 hairStyle = player->GetByteValue(PLAYER_BYTES, 2);
+        uint8 hairColor = player->GetByteValue(PLAYER_BYTES, 3);
+        uint8 facialFeature = player->GetByteValue(PLAYER_BYTES_2, 0);
+
+        if (mo && mo->IsOverrided())
+        {
+            skin = mo->GetSkin();
+            face = mo->GetFace();
+            hairStyle = mo->GetHairStyle();
+            hairColor = mo->GetHairColor();
+            facialFeature = mo->GetFacialFeature();
+        }
+
+        data << uint8(skin);
+        data << uint8(face);
+        data << uint8(hairStyle);
+        data << uint8(hairColor);
+        data << uint8(facialFeature);
+        data << uint32(player->GetGuildId());
 
         static EquipmentSlots const itemSlots[] =
         {

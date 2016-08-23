@@ -1239,22 +1239,22 @@ void WorldSession::HandleAlterAppearance(WorldPacket & recv_data)
 
     // 0 - ok
     // 1, 3 - not enough money
-    // 2 - you have to seat on barber chair
+    // 2 - you have to sit on barber chair
     if (!_player->HasEnoughMoney(Cost))
     {
         WorldPacket data(SMSG_BARBER_SHOP_RESULT, 4);
-        data << uint32(1);                                  // no money
+        data << uint32(1);
         SendPacket(&data);
         return;
     }
     else
     {
         WorldPacket data(SMSG_BARBER_SHOP_RESULT, 4);
-        data << uint32(0);                                  // ok
+        data << uint32(0);
         SendPacket(&data);
     }
 
-    _player->ModifyMoney(-int32(Cost));                     // it isn't free
+    _player->ModifyMoney(-int32(Cost));
     _player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_AT_BARBER, Cost);
 
     _player->SetByteValue(PLAYER_BYTES, 2, uint8(bs_hair->hair_id));
@@ -1263,9 +1263,15 @@ void WorldSession::HandleAlterAppearance(WorldPacket & recv_data)
     if (bs_skinColor)
         _player->SetByteValue(PLAYER_BYTES, 0, uint8(bs_skinColor->hair_id));
 
+    if (ModelOverride* mo = _player->GetModelOverride())
+    {
+        mo->SetOriginalPlayerBytes(_player->GetUInt32Value(PLAYER_BYTES));
+        mo->SetOriginalPlayerBytes2(_player->GetUInt32Value(PLAYER_BYTES_2));
+    }
+
     _player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_VISIT_BARBER_SHOP, 1);
 
-    _player->SetStandState(0);                              // stand up
+    _player->SetStandState(UNIT_STAND_STATE_STAND);
 }
 
 void WorldSession::HandleRemoveGlyph(WorldPacket & recv_data)

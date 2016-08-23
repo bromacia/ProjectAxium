@@ -271,7 +271,14 @@ class Object
 
         void ClearUpdateMask(bool remove);
 
+        int32* GetInt32Values() const { return m_int32Values; }
+        uint32* GetUInt32Values() const { return m_uint32Values; }
+        float* GetFloatValues() const { return m_floatValues; }
+        bool* GetChangedFields() const { return _changedFields; }
         uint16 GetValuesCount() const { return m_valuesCount; }
+
+        bool IsObjectUpdated() const { return m_objectUpdated; }
+        void SetObjectUpdated(bool b) { m_objectUpdated = b; }
 
         virtual bool hasQuest(uint32 /* quest_id */) const { return false; }
         virtual bool hasInvolvedQuest(uint32 /* quest_id */) const { return false; }

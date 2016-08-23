@@ -24,6 +24,7 @@ set(scripts_STAT_SRCS
   Commands/cs_learn.cpp
   Commands/cs_mmaps.cpp
   Commands/cs_misc.cpp
+  Commands/cs_modeloverride.cpp
   Commands/cs_modify.cpp
   Commands/cs_morph.cpp
   Commands/cs_npc.cpp

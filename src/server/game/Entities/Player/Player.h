@@ -25,6 +25,8 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 struct Mail;
 class Channel;
@@ -1115,6 +1117,197 @@ struct ChallengeInformation
     GroupQueueInfo* ginfo;
 };
 
+enum RaceGenderPair
+{
+    RACE_HUMAN_MALE =       (RACE_HUMAN << 4) | GENDER_MALE,
+    RACE_HUMAN_FEMALE =     (RACE_HUMAN << 4) | GENDER_FEMALE,
+    RACE_ORC_MALE =         (RACE_ORC << 4) | GENDER_MALE,
+    RACE_ORC_FEMALE =       (RACE_ORC << 4) | GENDER_FEMALE,
+    RACE_DWARF_MALE =       (RACE_DWARF << 4) | GENDER_MALE,
+    RACE_DWARF_FEMALE =     (RACE_DWARF << 4) | GENDER_FEMALE,
+    RACE_NIGHTELF_MALE =    (RACE_NIGHTELF << 4) | GENDER_MALE,
+    RACE_NIGHTELF_FEMALE =  (RACE_NIGHTELF << 4) | GENDER_FEMALE,
+    RACE_UNDEAD_MALE =      (RACE_UNDEAD_PLAYER << 4) | GENDER_MALE,
+    RACE_UNDEAD_FEMALE =    (RACE_UNDEAD_PLAYER << 4) | GENDER_FEMALE,
+    RACE_TAUREN_MALE =      (RACE_TAUREN << 4) | GENDER_MALE,
+    RACE_TAUREN_FEMALE =    (RACE_TAUREN << 4) | GENDER_FEMALE,
+    RACE_GNOME_MALE =       (RACE_GNOME << 4) | GENDER_MALE,
+    RACE_GNOME_FEMALE =     (RACE_GNOME << 4) | GENDER_FEMALE,
+    RACE_TROLL_MALE =       (RACE_TROLL << 4) | GENDER_MALE,
+    RACE_TROLL_FEMALE =     (RACE_TROLL << 4) | GENDER_FEMALE,
+    RACE_BLOODELF_MALE =    (RACE_BLOODELF << 4) | GENDER_MALE,
+    RACE_BLOODELF_FEMALE =  (RACE_BLOODELF << 4) | GENDER_FEMALE,
+    RACE_DRAENEI_MALE =     (RACE_DRAENEI << 4) | GENDER_MALE,
+    RACE_DRAENEI_FEMALE =   (RACE_DRAENEI << 4) | GENDER_FEMALE,
+};
+
+const std::unordered_map<uint8, uint32> RaceGenderDisplayIds =
+{
+    { RACE_HUMAN_MALE,      49    },
+    { RACE_HUMAN_FEMALE,    50    },
+    { RACE_ORC_MALE,        51    },
+    { RACE_ORC_FEMALE,      52    },
+    { RACE_DWARF_MALE,      53    },
+    { RACE_DWARF_FEMALE,    54    },
+    { RACE_NIGHTELF_MALE,   55    },
+    { RACE_NIGHTELF_FEMALE, 56    },
+    { RACE_UNDEAD_MALE,     57    },
+    { RACE_UNDEAD_FEMALE,   58    },
+    { RACE_TAUREN_MALE,     59    },
+    { RACE_TAUREN_FEMALE,   60    },
+    { RACE_GNOME_MALE,      1563  },
+    { RACE_GNOME_FEMALE,    1564  },
+    { RACE_TROLL_MALE,      1478  },
+    { RACE_TROLL_FEMALE,    1479  },
+    { RACE_BLOODELF_MALE,   15476 },
+    { RACE_BLOODELF_FEMALE, 15475 },
+    { RACE_DRAENEI_MALE,    16125 },
+    { RACE_DRAENEI_FEMALE,  16126 }
+};
+
+struct RaceGenderCustomizationLimits
+{
+    RaceGenderCustomizationLimits() : Skin(0), Face(0), HairStyle(0), HairColor(0), FacialFeature(0) { }
+    RaceGenderCustomizationLimits(uint8 skin, uint8 face, uint8 hairStyle, uint8 hairColor, uint8 facialFeature) :
+        Skin(skin), Face(face), HairStyle(hairStyle), HairColor(hairColor), FacialFeature(facialFeature) { }
+
+    uint8 Skin;
+    uint8 Face;
+    uint8 HairStyle;
+    uint8 HairColor;
+    uint8 FacialFeature;
+};
+
+const std::unordered_map<uint8, const RaceGenderCustomizationLimits> RaceGenderLimits =
+{
+    { RACE_HUMAN_MALE,      { 14, 23, 16, 12, 8  } },
+    { RACE_HUMAN_FEMALE,    { 14, 29, 23, 12, 6  } },
+    { RACE_ORC_MALE,        { 17, 17, 11, 10, 10 } },
+    { RACE_ORC_FEMALE,      { 13, 17, 12, 10, 6  } },
+    { RACE_DWARF_MALE,      { 21, 19, 15, 12, 10 } },
+    { RACE_DWARF_FEMALE,    { 13, 19, 18, 12, 5  } },
+    { RACE_NIGHTELF_MALE,   { 11, 17, 11, 10, 5  } },
+    { RACE_NIGHTELF_FEMALE, { 11, 17, 11, 10, 9  } },
+    { RACE_UNDEAD_MALE,     { 5,  19, 14, 9,  16 } },
+    { RACE_UNDEAD_FEMALE,   { 5,  19, 14, 9,  7  } },
+    { RACE_TAUREN_MALE,     { 24, 9,  12, 3,  6  } },
+    { RACE_TAUREN_FEMALE,   { 16, 7,  11, 3,  4  } },
+    { RACE_GNOME_MALE,      { 9,  13, 11, 11, 7  } },
+    { RACE_GNOME_FEMALE,    { 9,  13, 11, 11, 6  } },
+    { RACE_TROLL_MALE,      { 17, 9,  9,  12, 10 } },
+    { RACE_TROLL_FEMALE,    { 17, 11, 9,  12, 5  } },
+    { RACE_BLOODELF_MALE,   { 18, 19, 15, 12, 9  } },
+    { RACE_BLOODELF_FEMALE, { 18, 19, 19, 12, 10 } },
+    { RACE_DRAENEI_MALE,    { 16, 19, 13, 9,  7  } },
+    { RACE_DRAENEI_FEMALE,  { 14, 19, 13, 9,  6  } }
+};
+
+struct ModelInformation
+{
+    protected:
+        ModelInformation() :
+            m_displayId(0),
+            m_race(0),
+            m_gender(0),
+            m_skin(0),
+            m_face(0),
+            m_hairStyle(0),
+            m_hairColor(0),
+            m_facialFeature(0) { }
+
+        uint32 m_displayId;
+        uint8 m_race;
+        uint8 m_gender;
+        uint8 m_skin;
+        uint8 m_face;
+        uint8 m_hairStyle;
+        uint8 m_hairColor;
+        uint8 m_facialFeature;
+};
+
+class ModelOverride : public ModelInformation
+{
+    public:
+        enum UpdateType
+        {
+            UPDATETYPE_NO_UPDATE,
+            UPDATETYPE_DISPLAYID,
+            UPDATETYPE_PLAYERBYTES,
+            UPDATETYPE_PLAYERBYTES2,
+        };
+
+        ModelOverride(Player* p);
+        ModelOverride() :
+            m_player(NULL),
+            m_overrided(false),
+            m_needsUpdate(false),
+            m_originalDisplayId(0),
+            m_originalUnitFieldBytes(0),
+            m_originalPlayerBytes(0),
+            m_originalPlayerBytes2(0) { }
+
+        bool IsOverrided() { return m_overrided; }
+        void SetOverrided(bool overrided) { m_overrided = overrided; }
+        bool ModelChanged() { return m_modelChanged; }
+        void SetModelChanged(bool changed) { m_modelChanged = changed; }
+        bool NeedsUpdate() { return m_needsUpdate; }
+        void SetNeedsUpdate(UpdateType updateType);
+
+        void Restore();
+
+        void SetDisplayId(uint32 displayId);
+        void SetRace(uint8 race);
+        void SetGender(uint8 gender);
+        void SetSkin(uint8 skin);
+        void SetFace(uint8 face);
+        void SetHairStyle(uint8 hairStyle);
+        void SetHairColor(uint8 hairColor);
+        void SetFacialFeature(uint8 facialFeature);
+        void SetOriginalDisplayId(uint32 displayId) { m_originalDisplayId = displayId; }
+        void SetOriginalUnitFieldBytes(uint32 unitFieldBytes) { m_originalUnitFieldBytes = unitFieldBytes; }
+        void SetOriginalPlayerBytes(uint32 playerBytes) { m_originalPlayerBytes = playerBytes; }
+        void SetOriginalPlayerBytes2(uint32 playerBytes2) { m_originalPlayerBytes2 = playerBytes2; }
+
+        WorldPacket BuildOverridePacket();
+
+        uint32 GetDisplayId() { return m_displayId; }
+        uint8 GetRace() { return m_race; }
+        uint8 GetGender() { return m_gender; }
+        uint8 GetSkin() { return m_skin; }
+        uint8 GetFace() { return m_face; }
+        uint8 GetHairStyle() { return m_hairStyle; }
+        uint8 GetHairColor() { return m_hairColor; }
+        uint8 GetFacialFeature() { return m_facialFeature; }
+        uint32 GetOverridedUnitFieldBytes();
+        uint32 GetOverridedPlayerBytes();
+        uint32 GetOverridedPlayerBytes2();
+
+        uint32 GetOriginalDisplayId() { return m_originalDisplayId; }
+        uint8 GetOriginalRace() { return m_originalUnitFieldBytes & 0xFF; }
+        uint8 GetOriginalGender() { return (m_originalUnitFieldBytes >> 16) & 0xFF; }
+        uint8 GetOriginalSkin() { return m_originalPlayerBytes & 0xFF; }
+        uint8 GetOriginalFace() { return (m_originalPlayerBytes >> 8) & 0xFF; }
+        uint8 GetOriginalHairStyle() { return (m_originalPlayerBytes >> 16) & 0xFF; }
+        uint8 GetOriginalHairColor() { return (m_originalPlayerBytes >> 24); }
+        uint8 GetOriginalFacialFeature() { return m_originalPlayerBytes2 & 0xFF; }
+        uint32 GetOriginalUnitFieldBytes() { return m_originalUnitFieldBytes; }
+        uint32 GetOriginalPlayerBytes() { return m_originalPlayerBytes; }
+        uint32 GetOriginalPlayerBytes2() { return m_originalPlayerBytes2; }
+
+    private:
+        Player* m_player;
+        WorldSession* m_session;
+
+        bool m_overrided;
+        bool m_needsUpdate;
+        bool m_modelChanged;
+
+        uint32 m_originalDisplayId;
+        uint32 m_originalUnitFieldBytes;
+        uint32 m_originalPlayerBytes;
+        uint32 m_originalPlayerBytes2;
+};
+
 class Player : public Unit, public GridObject<Player>
 {
     friend class WorldSession;
@@ -1288,7 +1481,7 @@ class Player : public Unit, public GridObject<Player>
         bool IsValidPos(uint16 pos, bool explicit_pos) { return IsValidPos(pos >> 8, pos & 255, explicit_pos); }
         bool IsValidPos(uint8 bag, uint8 slot, bool explicit_pos);
         uint8 GetBankBagSlotCount() const { return GetByteValue(PLAYER_BYTES_2, 2); }
-        void SetBankBagSlotCount(uint8 count) { SetByteValue(PLAYER_BYTES_2, 2, count); }
+        void SetBankBagSlotCount(uint8 count);
         bool HasItemCount(uint32 item, uint32 count, bool inBankAlso = false) const;
         bool HasItemFitToSpellRequirements(SpellInfo const* spellInfo, Item const* ignoreItem = NULL);
         bool CanNoReagentCast(SpellInfo const* spellInfo) const;
@@ -2592,6 +2785,13 @@ class Player : public Unit, public GridObject<Player>
         bool IsMovementBlocked() const { return blockedMovement; }
         void SetMovementBlocked(bool x) { blockedMovement = x; }
 
+        void ForceUpdateFieldValues();
+
+        ModelOverride* GetModelOverride() { return m_modelOverride; }
+        void SetModelOverride(ModelOverride* mo) { m_modelOverride = mo; }
+        typedef std::unordered_map<uint64, std::unordered_set<uint32>> CachedModelsForPlayer;
+        CachedModelsForPlayer m_cachedModelsForPlayer;
+
         bool CheckItem(const ItemTemplate* vItemTemplate, const ItemTemplate* pItemTemplate);
         void TransmogrifyItem(uint32 itemId);
         void TransmogrifyEnchant(uint16 enchantId);
@@ -3044,6 +3244,8 @@ class Player : public Unit, public GridObject<Player>
         InstanceTimeMap _instanceResetTimes;
         uint32 _pendingBindId;
         uint32 _pendingBindTimer;
+
+        ModelOverride* m_modelOverride;
 
         bool blockedMovement;
 

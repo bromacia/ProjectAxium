@@ -18,6 +18,7 @@
 #include "ObjectDefines.h"
 #include "MapInstanced.h"
 #include "World.h"
+#include "DelayedPacketMgr.h"
 
 #include <cmath>
 
@@ -337,6 +338,7 @@ void ObjectAccessor::RemoveOldCorpses()
 void ObjectAccessor::Update(uint32 /*diff*/)
 {
     UpdateDataMapType update_players;
+    std::vector<Player*> override_update_players;
 
     while (!i_objects.empty())
     {
@@ -344,14 +346,55 @@ void ObjectAccessor::Update(uint32 /*diff*/)
         ASSERT(obj && obj->IsInWorld());
         i_objects.erase(i_objects.begin());
         obj->BuildUpdate(update_players);
+
+        if (Player* player = obj->ToPlayer())
+            if (player->GetModelOverride()->NeedsUpdate())
+                override_update_players.push_back(player);
     }
 
-    WorldPacket packet;                                     // here we allocate a std::vector with a size of 0x10000
-    for (UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
+    if (!update_players.empty())
     {
-        iter->second.BuildPacket(&packet);
-        iter->first->GetSession()->SendPacket(&packet);
-        packet.clear();                                     // clean the string
+        WorldPacket packet; // here we allocate a std::vector with a size of 0x10000
+        for (UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
+        {
+            iter->second.BuildPacket(&packet);
+            sDelayedPacketMgr->Queue(iter->first->GetSession(), packet, 0);
+            packet.clear();
+        }
+
+        if (!override_update_players.empty())
+        {
+            // 2 pairs so there doesn't need to be any calls to player class members in the code below
+            // All we need is the override packet, the player's GUID and the player's overrided DisplayId
+            std::vector<std::pair<WorldPacket, std::pair<uint64, uint32>>> override_packets;
+            for (Player* p : override_update_players)
+            {
+                ModelOverride* mo = p->GetModelOverride();
+                override_packets.push_back(std::make_pair(mo->BuildOverridePacket(), std::make_pair(p->GetGUID(), mo->GetDisplayId())));
+                mo->SetModelChanged(false);
+                mo->SetNeedsUpdate(ModelOverride::UPDATETYPE_NO_UPDATE); // set to false
+            }
+
+            for (std::pair<WorldPacket, std::pair<uint64, uint32>> op : override_packets)
+            {
+                for (UpdateDataMapType::iterator itr = update_players.begin(); itr != update_players.end(); ++itr)
+                {
+                    std::unordered_set<uint32>* cachedModels = &itr->first->m_cachedModelsForPlayer[op.second.first];
+                    uint32 displayId = op.second.second;
+                    bool modelCached = cachedModels->find(displayId) != cachedModels->end();
+                    cachedModels->insert(displayId);
+
+                    // Send with 250ms if the model isn't cached in the client because it'll take some time
+                    // for the new model to get loaded and the override packet must reach the client only
+                    // after the fields update has been processed and the new model is loaded otherwise
+                    // the textures for the new model won't be loaded properly
+                    // Send with 25ms if the model is cached because the client won't take as long to load
+                    // the new model since it's been cached and 25ms is probably slow enough to reach the
+                    // client after the model is done loading (hopefully)
+                    sDelayedPacketMgr->Queue(itr->first->GetSession(), op.first, !modelCached ? 250 : 25);
+                }
+            }
+        }
     }
 }
 

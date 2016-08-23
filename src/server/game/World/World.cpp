@@ -58,6 +58,7 @@
 #include "Channel.h"
 #include "WardenCheckMgr.h"
 #include "Warden.h"
+#include "DelayedPacketMgr.h"
 
 volatile bool World::m_stopEvent = false;
 uint8 World::m_ExitCode = SHUTDOWN_EXIT_CODE;
@@ -2107,6 +2108,9 @@ void World::Update(uint32 diff)
 
     // update the instance reset times
     sInstanceSaveMgr->Update();
+
+    // Process delayed packets
+    sDelayedPacketMgr->Update(diff);
 
     // And last, but not least handle the issued cli commands
     ProcessCliCommands();

@@ -15812,7 +15812,22 @@ void Unit::RestoreDisplayId()
     else if (uint32 modelId = GetModelForForm(GetShapeshiftForm()))
         SetDisplayId(modelId);
     else
+    {
+        if (Player* player = ToPlayer())
+        {
+            ModelOverride* mo = player->GetModelOverride();
+
+            // IsOverrided for normal calls and ModelChanged for calls from the ModelOverride class 
+            if (mo->IsOverrided() || mo->ModelChanged())
+            {
+                SetDisplayId(mo->GetDisplayId());
+                mo->SetNeedsUpdate(ModelOverride::UPDATETYPE_DISPLAYID);
+                return;
+            }
+        }
+
         SetDisplayId(GetNativeDisplayId());
+    }
 }
 
 void Unit::ClearComboPointHolders()

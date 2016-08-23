@@ -12,6 +12,7 @@ class utility_commandscript : public CommandScript
         {
             static ChatCommand utilityCommandTable[] =
             {
+                { "test",                   SEC_ADMINISTRATOR,  false, &HandleTestCommand,                     "", NULL },
                 { "customize",              SEC_PLAYER,         false, &HandleCustomizeCommand,                 "", NULL },
                 { "race",                   SEC_PLAYER,         false, &HandleRaceCommand,                      "", NULL },
                 { "faction",                SEC_PLAYER,         false, &HandleFactionCommand,                   "", NULL },
@@ -37,6 +38,10 @@ class utility_commandscript : public CommandScript
                 { "bank",                   SEC_PLAYER,         false, &HandleBankCommand,                      "", NULL },
                 { "mailbox",                SEC_PLAYER,         false, &HandleMailboxCommand,                   "", NULL },
                 { "commentator",            SEC_GAMEMASTER,     false, &HandleCommentatorCommand,               "", NULL },
+                { "forceupdatefieldvalues", SEC_GAMEMASTER,     false, &HandleForceUpdateFieldValuesCommand,    "", NULL },
+                { "setfieldvalue",          SEC_GAMEMASTER,     false, &HandleSetFieldValueCommand,             "", NULL },
+                { "copyappearance",         SEC_GAMEMASTER,     false, &HandleCopyAppearanceCommand,            "", NULL },
+                { "sendappearance",         SEC_GAMEMASTER,     false, &HandleSendAppearanceCommand,            "", NULL },
                 { NULL,                     0,                  false, NULL,                                    "", NULL }
             };
             static ChatCommand commandTable[] =
@@ -45,6 +50,16 @@ class utility_commandscript : public CommandScript
                 { NULL,               0,                  false, NULL,                                    "", NULL }
             };
             return commandTable;
+        }
+
+        static bool HandleTestCommand(ChatHandler* handler, const char* /*args*/)
+        {
+            Player* player = handler->getSelectedPlayer();
+            if (!player)
+                player = handler->GetSession()->GetPlayer();
+
+
+            return true;
         }
 
         static bool HandleCustomizeCommand(ChatHandler* handler, const char* /*args*/)
@@ -132,6 +147,12 @@ class utility_commandscript : public CommandScript
         {
             Player* player = handler->GetSession()->GetPlayer();
 
+            if (player->GetModelOverride()->IsOverrided())
+            {
+                handler->SetSentErrorMessage(true);
+                return false;
+            }
+
             if (player->IsSitState())
             {
                 handler->PSendSysMessage("You cant do that while sitting");
@@ -210,9 +231,6 @@ class utility_commandscript : public CommandScript
                 return false;
 
             uint8 slot = (uint32)atoi(slotArg);
-            if (!slot)
-                return false;
-
             Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
             if (!item)
                 return false;
@@ -249,9 +267,6 @@ class utility_commandscript : public CommandScript
                 return false;
 
             uint8 slot = (uint32)atoi(slotArg);
-            if (!slot)
-                return false;
-
             Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
             if (!item)
                 return false;
@@ -288,9 +303,6 @@ class utility_commandscript : public CommandScript
                 return false;
 
             uint8 slot = (uint32)atoi(slotArg);
-            if (!slot)
-                return false;
-
             Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
             if (!item)
                 return false;
@@ -319,9 +331,6 @@ class utility_commandscript : public CommandScript
                 return false;
 
             uint8 slot = (uint32)atoi(slotArg);
-            if (!slot)
-                return false;
-
             Item* item = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
             if (!item)
                 return false;
@@ -860,6 +869,141 @@ class utility_commandscript : public CommandScript
         static bool HandleCommentatorCommand(ChatHandler* handler, const char* /*args*/)
         {
             handler->GetSession()->GetPlayer()->ToggleFlag(PLAYER_FLAGS, 4718592);
+            return true;
+        }
+
+        static bool HandleForceUpdateFieldValuesCommand(ChatHandler* handler, const char* args)
+        {
+            Player* player = handler->getSelectedPlayer();
+            if (!player)
+                player = handler->GetSession()->GetPlayer();
+
+            player->ForceUpdateFieldValues();
+            return true;
+        }
+
+        static bool HandleSetFieldValueCommand(ChatHandler* handler, const char* args)
+        {
+            Player* player = handler->getSelectedPlayer();
+            if (!player)
+                player = handler->GetSession()->GetPlayer();
+
+            if (!*args)
+                return false;
+
+            char* indexArg = strtok((char*)args, " ");
+            if (!indexArg)
+                return false;
+
+            uint16 index = (uint16)atoi(indexArg);
+            if (index > PLAYER_END)
+                return false;
+
+            char* valueArg = strtok(NULL, " ");
+            if (!valueArg)
+                return false;
+
+            uint32 value = (uint32)atoi(valueArg);
+            player->SetUInt32Value(index, value);
+            player->ForceUpdateFieldValues();
+            return true;
+        }
+
+        static bool HandleCopyAppearanceCommand(ChatHandler* handler, const char* args)
+        {
+            Player* player = handler->GetSession()->GetPlayer();
+            if (!player)
+                return false;
+
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+                return false;
+
+            for (uint8 slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
+            {
+                if (slot == EQUIPMENT_SLOT_HEAD || slot == EQUIPMENT_SLOT_SHOULDERS ||
+                    slot == EQUIPMENT_SLOT_CHEST || slot == EQUIPMENT_SLOT_HANDS ||
+                    slot == EQUIPMENT_SLOT_LEGS || slot == EQUIPMENT_SLOT_WRISTS ||
+                    slot == EQUIPMENT_SLOT_WAIST || slot == EQUIPMENT_SLOT_FEET ||
+                    slot == EQUIPMENT_SLOT_MAINHAND || slot == EQUIPMENT_SLOT_OFFHAND ||
+                    slot == EQUIPMENT_SLOT_RANGED)
+                {
+                    Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!playerItem)
+                        continue;
+
+                    Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!targetItem)
+                        continue;
+
+                    uint32 itemId = targetItem->TransmogEntry ? targetItem->TransmogEntry : targetItem->GetEntry();
+                    if (itemId)
+                        player->TransmogrifyItem(playerItem, slot, itemId);
+
+                    uint16 enchantId = targetItem->TransmogEnchant ? targetItem->TransmogEnchant : 0;
+                    if (enchantId)
+                        player->TransmogrifyEnchant(playerItem, slot, enchantId);
+                }
+            }
+
+            ModelOverride* pmo = player->GetModelOverride();
+            ModelOverride* tmo = target->GetModelOverride();
+            pmo->SetRace(tmo->GetRace());
+            pmo->SetGender(tmo->GetGender());
+            pmo->SetSkin(tmo->GetSkin());
+            pmo->SetFace(tmo->GetFace());
+            pmo->SetHairStyle(tmo->GetHairStyle());
+            pmo->SetHairColor(tmo->GetHairColor());
+            pmo->SetFacialFeature(tmo->GetFacialFeature());
+            return true;
+        }
+
+        static bool HandleSendAppearanceCommand(ChatHandler* handler, const char* args)
+        {
+            Player* player = handler->GetSession()->GetPlayer();
+            if (!player)
+                return false;
+
+            Player* target = handler->getSelectedPlayer();
+            if (!target)
+                return false;
+
+            for (uint8 slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
+            {
+                if (slot == EQUIPMENT_SLOT_HEAD || slot == EQUIPMENT_SLOT_SHOULDERS ||
+                    slot == EQUIPMENT_SLOT_CHEST || slot == EQUIPMENT_SLOT_HANDS ||
+                    slot == EQUIPMENT_SLOT_LEGS || slot == EQUIPMENT_SLOT_WRISTS ||
+                    slot == EQUIPMENT_SLOT_WAIST || slot == EQUIPMENT_SLOT_FEET ||
+                    slot == EQUIPMENT_SLOT_MAINHAND || slot == EQUIPMENT_SLOT_OFFHAND ||
+                    slot == EQUIPMENT_SLOT_RANGED)
+                {
+                    Item* playerItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!playerItem)
+                        continue;
+
+                    Item* targetItem = target->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+                    if (!targetItem)
+                        continue;
+
+                    uint32 itemId = playerItem->TransmogEntry ? playerItem->TransmogEntry : playerItem->GetEntry();
+                    if (itemId)
+                        target->TransmogrifyItem(targetItem, slot, itemId);
+
+                    uint16 enchantId = playerItem->TransmogEnchant ? playerItem->TransmogEnchant : 0;
+                    if (enchantId)
+                        target->TransmogrifyEnchant(targetItem, slot, enchantId);
+                }
+            }
+
+            ModelOverride* pmo = player->GetModelOverride();
+            ModelOverride* tmo = target->GetModelOverride();
+            tmo->SetRace(pmo->GetRace());
+            tmo->SetGender(pmo->GetGender());
+            tmo->SetSkin(pmo->GetSkin());
+            tmo->SetFace(pmo->GetFace());
+            tmo->SetHairStyle(pmo->GetHairStyle());
+            tmo->SetHairColor(pmo->GetHairColor());
+            tmo->SetFacialFeature(pmo->GetFacialFeature());
             return true;
         }
 };

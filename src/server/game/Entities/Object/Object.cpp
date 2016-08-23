@@ -693,10 +693,24 @@ void Object::_BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask*
     }
     else                                                    // other objects case (no special index checks)
     {
+        bool PlayerHasOverridedModel = target->GetModelOverride()->IsOverrided();
         for (uint16 index = 0; index < m_valuesCount; ++index)
         {
             if (updateMask->GetBit(index))
             {
+                if (PlayerHasOverridedModel)
+                {
+                    switch (index)
+                    {
+                        case PLAYER_BYTES:
+                            *data << target->GetModelOverride()->GetOverridedPlayerBytes();
+                            continue;
+                        case PLAYER_BYTES_2:
+                            *data << target->GetModelOverride()->GetOverridedPlayerBytes2();
+                            continue;
+                    }
+                }
+
                 // send in current format (float as float, uint32 as uint32)
                 *data << m_uint32Values[index];
             }
@@ -752,10 +766,8 @@ void Object::_SetUpdateBits(UpdateMask* updateMask, Player* /*target*/) const
     bool* indexes = _changedFields;
 
     for (uint16 index = 0; index < m_valuesCount; ++index, ++indexes)
-    {
         if (*indexes)
             updateMask->SetBit(index);
-    }
 }
 
 void Object::_SetCreateBits(UpdateMask* updateMask, Player* /*target*/) const

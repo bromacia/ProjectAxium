@@ -1587,6 +1587,11 @@ void GameObject::Use(Unit* user)
                 return;
 
             Player* player = user->ToPlayer();
+            if (!player)
+                return;
+
+            if (player->GetModelOverride()->IsOverrided())
+                return;
 
             // fallback, will always work
             player->TeleportTo(GetMapId(), GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation(), TELE_TO_NOT_LEAVE_TRANSPORT | TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET);

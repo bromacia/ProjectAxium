@@ -506,6 +506,31 @@ namespace Axium
         template<class NOT_INTERESTED> void Visit(GridRefManager<NOT_INTERESTED> &) {}
     };
 
+    struct PlayerUpdateNotifier
+    {
+        std::vector<Player*>& players;
+        PlayerUpdateNotifier(std::vector<Player*>& p) : players(p) {}
+
+        void Visit(PlayerMapType &m)
+        {
+            Player* player = NULL;
+            for (PlayerMapType::iterator itr = m.begin(); itr != m.end(); ++itr)
+            {
+                player = itr->getSource();
+                players.push_back(player);
+
+                if (!player->GetSharedVisionList().empty())
+                {
+                    SharedVisionList sharedVisionList = player->GetSharedVisionList();
+                    for (SharedVisionList::const_iterator itr2 = sharedVisionList.begin(); itr2 != sharedVisionList.end(); ++itr2)
+                        players.push_back(*itr2);
+                }
+            }
+        }
+
+        template<class SKIP> void Visit(GridRefManager<SKIP> &) {}
+    };
+
     // CHECKS && DO classes
 
     // WorldObject check classes
