@@ -1281,7 +1281,11 @@ void Spell::DoAllEffectOnTarget(TargetInfo* target)
     if (!caster)
         return;
 
-    SpellMissInfo missInfo = m_spellInfo->IsDelaySpell() ? m_caster->SpellHitResult(unit, m_spellInfo, m_canReflect) : target->missCondition;
+    if (m_spellInfo->IsDelaySpell())
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+            AddUnitTarget(unit, i);
+
+    SpellMissInfo missInfo = target->missCondition;
 
     // Need init unitTarget by default unit (can changed in code on reflect)
     // Or on missInfo != SPELL_MISS_NONE unitTarget undefined (but need in trigger subsystem)
@@ -1300,7 +1304,7 @@ void Spell::DoAllEffectOnTarget(TargetInfo* target)
     m_spellAura = NULL; // Set aura to null for every target-make sure that pointer is not used for unit without aura applied
 
     //Spells with this flag cannot trigger if effect is casted on self
-    bool canEffectTrigger = !(m_spellInfo->AttributesEx3 & SPELL_ATTR3_CANT_TRIGGER_PROC) && unitTarget->CanProc() && CanExecuteTriggersOnHit(mask);
+    bool canEffectTrigger = !(m_spellInfo->AttributesEx3 & SPELL_ATTR3_CANT_TRIGGER_PROC) && unitTarget->CanProc() && (CanExecuteTriggersOnHit(mask) || missInfo == SPELL_MISS_IMMUNE || missInfo == SPELL_MISS_IMMUNE2);
     Unit* spellHitTarget = NULL;
 
     if (missInfo == SPELL_MISS_NONE)                          // In case spell hit target, do all effect on that target
